@@ -33,3 +33,28 @@
      background: linear-gradient(to bottom right, #000000, #111111); 
   }
 }
+
+.react-select-container .react-select__control {
+  @apply bg-background border-input;
+}
+
+.react-select-container .react-select__control--is-focused {
+  @apply border-primary ring-2 ring-ring ring-offset-2;
+}
+
+.react-select-container .react-select__menu {
+  @apply bg-popover text-popover-foreground border border-border;
+}
+
+.react-select-container .react-select__option {
+  @apply bg-popover text-popover-foreground;
+}
+
+.react-select-container .react-select__option--is-focused {
+  @apply bg-accent text-accent-foreground;
+}
+
+.react-select-container .react-select__input-container,
+.react-select-container .react-select__single-value {
+  @apply text-foreground;
+}
