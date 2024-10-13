@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const timezones = [
   "UTC",
@@ -59,40 +58,29 @@ export default function DateTimeTimezonePicker() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const generateGoogleCalendarLink = () => {
+  const generateCalendarLink = (type: 'google' | 'ical' | 'outlook') => {
     if (!date) return ""
     const endDate = addMinutes(parseISO(zuluTime), duration)
     const encodedDescription = encodeURIComponent(description)
-    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventName)}&dates=${zuluTime.replace(/[-:]/g, "")}/${format(endDate, "yyyyMMdd'T'HHmmss'Z'")}&details=${encodedDescription}&ctz=${timezone}`
-  }
-
-  const generateICalLink = () => {
-    if (!date) return ""
     const startDate = zuluTime.replace(/[-:]/g, "")
-    const endDate = format(addMinutes(parseISO(zuluTime), duration), "yyyyMMdd'T'HHmmss'Z'")
-    const encodedDescription = description.replace(/\n/g, "\\n")
-    return `data:text/calendar;charset=utf8,BEGIN:VCALENDAR
+    const endDateFormatted = format(endDate, "yyyyMMdd'T'HHmmss'Z'")
+
+    switch (type) {
+      case 'google':
+        return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventName)}&dates=${startDate}/${endDateFormatted}&details=${encodedDescription}&ctz=${timezone}`
+      case 'ical':
+        return `data:text/calendar;charset=utf8,BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
 DTSTART:${startDate}
-DTEND:${endDate}
+DTEND:${endDateFormatted}
 SUMMARY:${eventName}
-DESCRIPTION:${encodedDescription}
+DESCRIPTION:${description.replace(/\n/g, "\\n")}
 END:VEVENT
 END:VCALENDAR`
-  }
-
-  const generateAgicalLink = () => {
-    if (!date) return ""
-    const endDate = format(addMinutes(parseISO(zuluTime), duration), "yyyy-MM-dd'T'HH:mm:ss'Z'")
-    const params = new URLSearchParams({
-      subject: eventName,
-      description: description,
-      dtstart: zuluTime,
-      dtend: endDate,
-      duration: `${duration}M`,
-    })
-    return `https://ics.agical.io/?${params.toString()}`
+      case 'outlook':
+        return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(eventName)}&startdt=${zuluTime}&enddt=${format(endDate, "yyyy-MM-dd'T'HH:mm:ss'Z'")}&body=${encodedDescription}&path=%2Fcalendar%2Faction%2Fcompose&rru=addevent`
+    }
   }
 
   return (
@@ -163,28 +151,19 @@ END:VCALENDAR`
         </p>
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Zulu Time:</p>
-          <p className="text-sm">{zuluTime}</p>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 bg-blue-600 text-white hover:bg-blue-700"
-                  onClick={copyToClipboard}
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{copied ? "Copied!" : "Copy to clipboard"}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <p className="text-sm text-amber-500">{zuluTime}</p>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 bg-blue-600 text-white hover:bg-blue-700"
+            onClick={copyToClipboard}
+          >
+            {copied ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
 
@@ -226,27 +205,39 @@ END:VCALENDAR`
         <div className="space-y-2">
           <Button
             variant="outline"
-            className="w-full bg-blue-600 text-white hover:bg-blue-700"
-            onClick={() => window.open(generateGoogleCalendarLink(), "_blank")}
+            className="w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center"
+            onClick={() => {
+              const link = generateCalendarLink('google')
+              navigator.clipboard.writeText(link)
+            }}
             disabled={!date}
           >
-            Add to Google Calendar
+            <Copy className="mr-2 h-4 w-4" />
+            Copy Google Calendar Link
           </Button>
           <Button
             variant="outline"
-            className="w-full bg-blue-600 text-white hover:bg-blue-700"
-            onClick={() => window.open(generateICalLink(), "_blank")}
+            className="w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center"
+            onClick={() => {
+              const link = generateCalendarLink('ical')
+              navigator.clipboard.writeText(link)
+            }}
             disabled={!date}
           >
-            Add to iCal
+            <Copy className="mr-2 h-4 w-4" />
+            Copy iCal Link
           </Button>
           <Button
             variant="outline"
-            className="w-full bg-blue-600 text-white hover:bg-blue-700"
-            onClick={() => window.open(generateAgicalLink(), "_blank")}
+            className="w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center"
+            onClick={() => {
+              const link = generateCalendarLink('outlook')
+              navigator.clipboard.writeText(link)
+            }}
             disabled={!date}
           >
-            Add to Outlook Calendar
+            <Copy className="mr-2 h-4 w-4" />
+            Copy Outlook Calendar Link
           </Button>
         </div>
       </div>
