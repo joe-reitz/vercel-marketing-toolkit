@@ -100,11 +100,10 @@ export default function DateTimeTimezonePicker() {
       dateParts[part.type] = part.value
     })
     
-    // Construct date in the selected timezone
-    const zonedDate = new Date(`${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}`)
-    
-    // Convert to UTC
-    const utcDate = new Date(zonedDate.getTime() - (zonedDate.getTimezoneOffset() * 60000))
+    // Construct UTC date
+    const utcDate = new Date(
+      `${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}.000Z`
+    )
     
     // Format the UTC date as Zulu time
     return utcDate.toISOString()
@@ -139,7 +138,7 @@ DESCRIPTION:${description.replace(/\n/g, "\\n")}
 END:VEVENT
 END:VCALENDAR`
       case 'outlook':
-        return `https://ics.agical.io/?subject=${encodeURIComponent(eventName)}&description=${encodedDescription}&dtstart=${zuluTime}&duration=${duration}M&reminder=15`
+        return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(eventName)}&startdt=${zuluTime}&enddt=${format(endDate, "yyyy-MM-dd'T'HH:mm:ss'Z'")}&body=${encodedDescription}&path=%2Fcalendar%2Faction%2Fcompose&rru=addevent`
     }
   }
 
@@ -165,9 +164,9 @@ END:VCALENDAR`
   useEffect(() => {
     // This will trigger a re-render and update the Zulu time
     if (date) {
-      setDate(new Date(date))
+      setDate(new Date(date.getTime()))
     }
-  }, [timezone])
+  }, [timezone, date])
 
   return (
     <div className="space-y-4 p-4 max-w-md mx-auto">
