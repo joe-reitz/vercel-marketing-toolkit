@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { format, parseISO, addMinutes } from "date-fns"
 import { CalendarIcon, Clock, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -18,15 +18,45 @@ import {
 } from "@/components/ui/select"
 
 const timezones = [
-  "UTC",
-  "America/New_York",
-  "America/Los_Angeles",
-  "Europe/London",
-  "Asia/Tokyo",
+  { name: "Eastern Time", value: "America/New_York" },
+  { name: "Central Time", value: "America/Chicago" },
+  { name: "Mountain Time", value: "America/Denver" },
+  { name: "Pacific Time", value: "America/Los_Angeles" },
+  { name: "Alaska Time", value: "America/Anchorage" },
+  { name: "Hawaii-Aleutian Time", value: "America/Adak" },
+  { name: "Hawaii Time", value: "Pacific/Honolulu" },
+  { name: "Arizona Time", value: "America/Phoenix" },
+  { name: "Vancouver", value: "America/Vancouver" },
+  { name: "Toronto", value: "America/Toronto" },
+  { name: "São Paulo", value: "America/Sao_Paulo" },
+  { name: "Mexico City", value: "America/Mexico_City" },
+  { name: "Buenos Aires", value: "America/Buenos_Aires" },
+  { name: "Lima", value: "America/Lima" },
+  { name: "UTC", value: "UTC" },
+  { name: "London", value: "Europe/London" },
+  { name: "Berlin", value: "Europe/Berlin" },
+  { name: "Paris", value: "Europe/Paris" },
+  { name: "Rome", value: "Europe/Rome" },
+  { name: "Madrid", value: "Europe/Madrid" },
+  { name: "Moscow", value: "Europe/Moscow" },
+  { name: "Cairo", value: "Africa/Cairo" },
+  { name: "Johannesburg", value: "Africa/Johannesburg" },
+  { name: "Dubai", value: "Asia/Dubai" },
+  { name: "Jerusalem", value: "Asia/Jerusalem" },
+  { name: "Tokyo", value: "Asia/Tokyo" },
+  { name: "Shanghai", value: "Asia/Shanghai" },
+  { name: "Seoul", value: "Asia/Seoul" },
+  { name: "Singapore", value: "Asia/Singapore" },
+  { name: "Kolkata", value: "Asia/Kolkata" },
+  { name: "Bangkok", value: "Asia/Bangkok" },
+  { name: "Sydney", value: "Australia/Sydney" },
+  { name: "Melbourne", value: "Australia/Melbourne" },
+  { name: "Perth", value: "Australia/Perth" },
+  { name: "Auckland", value: "Pacific/Auckland" },
 ]
 
 export default function DateTimeTimezonePicker() {
-  const [date, setDate] = useState<Date>()
+  const [date, setDate] = useState<Date | undefined>(undefined)
   const [time, setTime] = useState("12:00")
   const [timezone, setTimezone] = useState("UTC")
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
@@ -34,6 +64,9 @@ export default function DateTimeTimezonePicker() {
   const [eventName, setEventName] = useState("New Event")
   const [duration, setDuration] = useState(60)
   const [description, setDescription] = useState("")
+  const [googleCopied, setGoogleCopied] = useState(false)
+  const [iCalCopied, setICalCopied] = useState(false)
+  const [outlookCopied, setOutlookCopied] = useState(false)
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTime(e.target.value)
@@ -46,8 +79,35 @@ export default function DateTimeTimezonePicker() {
   const getZuluTime = () => {
     if (!date) return ""
     const [hours, minutes] = time.split(':').map(Number)
-    const dateWithTime = addMinutes(addMinutes(date, hours * 60), minutes)
-    return format(dateWithTime, "yyyy-MM-dd'T'HH:mm:ss'Z'")
+    const dateWithTime = new Date(date)
+    dateWithTime.setHours(hours, minutes)
+    
+    // Convert the date to the selected timezone
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+    
+    const parts = formatter.formatToParts(dateWithTime)
+    const dateParts: {[key: string]: string} = {}
+    parts.forEach(part => {
+      dateParts[part.type] = part.value
+    })
+    
+    // Construct date in the selected timezone
+    const zonedDate = new Date(`${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}`)
+    
+    // Convert to UTC
+    const utcDate = new Date(zonedDate.getTime() - (zonedDate.getTimezoneOffset() * 60000))
+    
+    // Format the UTC date as Zulu time
+    return utcDate.toISOString()
   }
 
   const zuluTime = getZuluTime()
@@ -62,7 +122,7 @@ export default function DateTimeTimezonePicker() {
     if (!date) return ""
     const endDate = addMinutes(parseISO(zuluTime), duration)
     const encodedDescription = encodeURIComponent(description)
-    const startDate = zuluTime.replace(/[-:]/g, "")
+    const startDate = zuluTime.replace(/[-:]/g, "").slice(0, -5) + "Z"
     const endDateFormatted = format(endDate, "yyyyMMdd'T'HHmmss'Z'")
 
     switch (type) {
@@ -79,9 +139,35 @@ DESCRIPTION:${description.replace(/\n/g, "\\n")}
 END:VEVENT
 END:VCALENDAR`
       case 'outlook':
-        return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(eventName)}&startdt=${zuluTime}&enddt=${format(endDate, "yyyy-MM-dd'T'HH:mm:ss'Z'")}&body=${encodedDescription}&path=%2Fcalendar%2Faction%2Fcompose&rru=addevent`
+        return `https://ics.agical.io/?subject=${encodeURIComponent(eventName)}&description=${encodedDescription}&dtstart=${zuluTime}&duration=${duration}M&reminder=15`
     }
   }
+
+  const handleCopy = (type: 'google' | 'ical' | 'outlook') => {
+    const link = generateCalendarLink(type)
+    navigator.clipboard.writeText(link)
+    switch (type) {
+      case 'google':
+        setGoogleCopied(true)
+        setTimeout(() => setGoogleCopied(false), 2000)
+        break
+      case 'ical':
+        setICalCopied(true)
+        setTimeout(() => setICalCopied(false), 2000)
+        break
+      case 'outlook':
+        setOutlookCopied(true)
+        setTimeout(() => setOutlookCopied(false), 2000)
+        break
+    }
+  }
+
+  useEffect(() => {
+    // This will trigger a re-render and update the Zulu time
+    if (date) {
+      setDate(new Date(date))
+    }
+  }, [timezone])
 
   return (
     <div className="space-y-4 p-4 max-w-md mx-auto">
@@ -105,7 +191,7 @@ END:VCALENDAR`
                 mode="single"
                 selected={date}
                 onSelect={(newDate) => {
-                  setDate(newDate)
+                  setDate(newDate || undefined)
                   setIsCalendarOpen(false)
                 }}
                 initialFocus
@@ -137,8 +223,8 @@ END:VCALENDAR`
           </SelectTrigger>
           <SelectContent>
             {timezones.map((tz) => (
-              <SelectItem key={tz} value={tz}>
-                {tz}
+              <SelectItem key={tz.value} value={tz.value}>
+                {tz.name} ({tz.value})
               </SelectItem>
             ))}
           </SelectContent>
@@ -205,39 +291,48 @@ END:VCALENDAR`
         <div className="space-y-2">
           <Button
             variant="outline"
-            className="w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center"
-            onClick={() => {
-              const link = generateCalendarLink('google')
-              navigator.clipboard.writeText(link)
-            }}
+            className={`w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center transition-all duration-200 ${
+              googleCopied ? 'bg-green-600' : ''
+            }`}
+            onClick={() => handleCopy('google')}
             disabled={!date}
           >
-            <Copy className="mr-2 h-4 w-4" />
-            Copy Google Calendar Link
+            {googleCopied ? (
+              <Check className="mr-2 h-4 w-4" />
+            ) : (
+              <Copy className="mr-2 h-4 w-4" />
+            )}
+            {googleCopied ? 'Copied!' : 'Copy Google Calendar Link'}
           </Button>
           <Button
             variant="outline"
-            className="w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center"
-            onClick={() => {
-              const link = generateCalendarLink('ical')
-              navigator.clipboard.writeText(link)
-            }}
+            className={`w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center transition-all duration-200 ${
+              iCalCopied ? 'bg-green-600' : ''
+            }`}
+            onClick={() => handleCopy('ical')}
             disabled={!date}
           >
-            <Copy className="mr-2 h-4 w-4" />
-            Copy iCal Link
+            {iCalCopied ? (
+              <Check className="mr-2 h-4 w-4" />
+            ) : (
+              <Copy className="mr-2 h-4 w-4" />
+            )}
+            {iCalCopied ? 'Copied!' : 'Copy iCal Link'}
           </Button>
           <Button
             variant="outline"
-            className="w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center"
-            onClick={() => {
-              const link = generateCalendarLink('outlook')
-              navigator.clipboard.writeText(link)
-            }}
+            className={`w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center transition-all duration-200 ${
+              outlookCopied ? 'bg-green-600' : ''
+            }`}
+            onClick={() => handleCopy('outlook')}
             disabled={!date}
           >
-            <Copy className="mr-2 h-4 w-4" />
-            Copy Outlook Calendar Link
+            {outlookCopied ? (
+              <Check className="mr-2 h-4 w-4" />
+            ) : (
+              <Copy className="mr-2 h-4 w-4" />
+            )}
+            {outlookCopied ? 'Copied!' : 'Copy Outlook Calendar Link'}
           </Button>
         </div>
       </div>
