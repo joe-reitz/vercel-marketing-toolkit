@@ -141,7 +141,7 @@ DESCRIPTION:${description.replace(/\n/g, "\\n")}
 END:VEVENT
 END:VCALENDAR`
       case 'outlook':
-        return `https://outlook.office.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&startdt=${zuluTime}&enddt=${format(endDate, "yyyy-MM-dd'T'HH:mm:ss'Z'")}&subject=${encodeURIComponent(eventName)}&body=${encodedDescription}`
+        return `https://ics.agical.io/?subject=${description}&startdt=${zuluTime}&enddt=${format(endDate, "yyyy-MM-dd'T'HH:mm:ss'Z'")}&subject=${encodeURIComponent(eventName)}&body=${encodedDescription}`
     }
   }, [date, zuluTime, duration, description, eventName, timezone])
 
