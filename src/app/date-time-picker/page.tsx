@@ -141,7 +141,7 @@ DESCRIPTION:${description.replace(/\n/g, "\\n")}
 END:VEVENT
 END:VCALENDAR`
       case 'outlook':
-        return `https://ics.agical.io/?subject=${description}&startdt=${zuluTime}&enddt=${format(endDate, "yyyy-MM-dd'T'HH:mm:ss'Z'")}&subject=${encodeURIComponent(eventName)}&body=${encodedDescription}`
+        return `https://ics.agical.io/?startdt=${zuluTime}&enddt=${format(endDate, "yyyy-MM-dd'T'HH:mm:ss'Z'")}&subject=${encodeURIComponent(eventName)}&description=${encodedDescription}`
     }
   }, [date, zuluTime, duration, description, eventName, timezone])
 
@@ -293,7 +293,7 @@ END:VCALENDAR`
             disabled={!date}
           >
             {googleCopied ? (
-              <Check className="mr-2 h-4 w-4" />
+              <Check className="mr-2  h-4 w-4" />
             ) : (
               <Copy className="mr-2 h-4 w-4" />
             )}
