@@ -1,20 +1,60 @@
-/* src/app/globals.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 0, 0, 0;
-  --background-end-rgb: 0, 0, 0;
+ 
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 13%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 63%;
+    --accent: 0 0% 13%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 13%;
+    --input: 0 0% 13%;
+    --ring: 0 0% 100%;
+    --radius: 0.5rem;
+  }
+}
+ 
+@layer base {
+  body {
+    @apply bg-black text-white;
+     background: linear-gradient(to bottom right, #000000, #111111); 
+  }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+.react-select-container .react-select__control {
+  @apply bg-background border-input;
+}
+
+.react-select-container .react-select__control--is-focused {
+  @apply border-primary ring-2 ring-ring ring-offset-2;
+}
+
+.react-select-container .react-select__menu {
+  @apply bg-popover text-popover-foreground border border-border;
+}
+
+.react-select-container .react-select__option {
+  @apply bg-popover text-popover-foreground;
+}
+
+.react-select-container .react-select__option--is-focused {
+  @apply bg-accent text-accent-foreground;
+}
+
+.react-select-container .react-select__input-container,
+.react-select-container .react-select__single-value {
+  @apply text-foreground;
 }
