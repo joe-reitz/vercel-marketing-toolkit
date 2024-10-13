@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { format, parseISO, addMinutes } from "date-fns"
 import { CalendarIcon, Clock, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -67,6 +67,7 @@ export default function DateTimeTimezonePicker() {
   const [googleCopied, setGoogleCopied] = useState(false)
   const [iCalCopied, setICalCopied] = useState(false)
   const [outlookCopied, setOutlookCopied] = useState(false)
+  const [zuluTime, setZuluTime] = useState("")
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTime(e.target.value)
@@ -76,13 +77,13 @@ export default function DateTimeTimezonePicker() {
     setIsCalendarOpen(!isCalendarOpen)
   }
 
-  const getZuluTime = () => {
+  const updateZuluTime = useCallback(() => {
     if (!date) return ""
     const [hours, minutes] = time.split(':').map(Number)
     const dateWithTime = new Date(date)
-    dateWithTime.setHours(hours, minutes)
+    dateWithTime.setHours(hours, minutes, 0, 0)
     
-    // Convert the date to the selected timezone
+    // Convert to UTC
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,
       year: 'numeric',
@@ -107,9 +108,11 @@ export default function DateTimeTimezonePicker() {
     
     // Format the UTC date as Zulu time
     return utcDate.toISOString()
-  }
+  }, [date, time, timezone])
 
-  const zuluTime = getZuluTime()
+  useEffect(() => {
+    setZuluTime(updateZuluTime())
+  }, [date, time, timezone, updateZuluTime])
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(zuluTime)
@@ -117,7 +120,7 @@ export default function DateTimeTimezonePicker() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const generateCalendarLink = (type: 'google' | 'ical' | 'outlook') => {
+  const generateCalendarLink = useCallback((type: 'google' | 'ical' | 'outlook') => {
     if (!date) return ""
     const endDate = addMinutes(parseISO(zuluTime), duration)
     const encodedDescription = encodeURIComponent(description)
@@ -138,9 +141,9 @@ DESCRIPTION:${description.replace(/\n/g, "\\n")}
 END:VEVENT
 END:VCALENDAR`
       case 'outlook':
-        return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(eventName)}&startdt=${zuluTime}&enddt=${format(endDate, "yyyy-MM-dd'T'HH:mm:ss'Z'")}&body=${encodedDescription}&path=%2Fcalendar%2Faction%2Fcompose&rru=addevent`
+        return `https://outlook.office.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent&startdt=${zuluTime}&enddt=${format(endDate, "yyyy-MM-dd'T'HH:mm:ss'Z'")}&subject=${encodeURIComponent(eventName)}&body=${encodedDescription}`
     }
-  }
+  }, [date, zuluTime, duration, description, eventName, timezone])
 
   const handleCopy = (type: 'google' | 'ical' | 'outlook') => {
     const link = generateCalendarLink(type)
@@ -160,13 +163,6 @@ END:VCALENDAR`
         break
     }
   }
-
-  useEffect(() => {
-    // This will trigger a re-render and update the Zulu time
-    if (date) {
-      setDate(new Date(date.getTime()))
-    }
-  }, [timezone, date])
 
   return (
     <div className="space-y-4 p-4 max-w-md mx-auto">
