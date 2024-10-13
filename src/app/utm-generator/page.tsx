@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -67,10 +67,9 @@ export default function UTMGenerator() {
     setTimeout(() => setIsCopied(false), 2000)
   }
 
-  const handleGroupingSelect = (medium: string,source: string ) => {
+  const handleGroupingSelect = (medium: string, source: string) => {
     setUtmMedium(medium)
     setUtmSource(source)
-    
   }
 
   return (
