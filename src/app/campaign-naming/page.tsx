@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -38,6 +38,16 @@ export default function CampaignNamingGenerator() {
       .join('_')
       .toLowerCase()
     setCampaignName(name)
+  }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(campaignName)
+    setIsCopied(true)
+    toast({
+      title: "Copied to clipboard",
+      description: "The campaign name has been copied to your clipboard.",
+    })
+    setTimeout(() => setIsCopied(false), 2000)
   }
 
   return (
@@ -122,7 +132,7 @@ export default function CampaignNamingGenerator() {
           />
         </div>
 
-        <Button onClick={generateCampaignName} className="w-full bg-blue-500 hover:bg-blue-800  text-white">
+        <Button onClick={generateCampaignName} className="w-full bg-blue-500 hover:bg-blue-800 text-white">
           Generate Campaign Name
         </Button>
 
@@ -135,15 +145,7 @@ export default function CampaignNamingGenerator() {
             <Button
               variant="secondary"
               size="icon"
-              onClick={() => {
-                navigator.clipboard.writeText(campaignName)
-                setIsCopied(true)
-                toast({
-                  title: "Copied to clipboard",
-                  description: "The campaign name has been copied to your clipboard.",
-                })
-                setTimeout(() => setIsCopied(false), 2000)
-              }}
+              onClick={handleCopy}
               className={`transition-all duration-300 ${isCopied ? 'bg-green-700' : 'bg-green-800'}`}
             >
               {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
