@@ -152,7 +152,7 @@ export default function UTMGenerator() {
         </div>
 
         <Button onClick={generateUrl} className="w-full bg-blue-500 hover:bg-blue-800 text-white">
-          Generate UTM URL
+          Generate UTM Parameters
         </Button>
 
         {generatedUrl && (
