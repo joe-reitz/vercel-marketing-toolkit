@@ -34,6 +34,9 @@ type ImageSize = keyof typeof IMAGE_SIZES
 const ALIGNMENTS = ['left', 'center', 'right'] as const
 const VERTICAL_POSITIONS = ['top', 'middle', 'bottom'] as const
 
+type Alignment = typeof ALIGNMENTS[number]
+type VerticalPosition = typeof VERTICAL_POSITIONS[number]
+
 export default function ImageGenerator() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [text, setText] = useState('Your text here')
@@ -41,10 +44,10 @@ export default function ImageGenerator() {
   const [logoOption, setLogoOption] = useState<LogoOption>('vercel-logotype')
   const [imageSize, setImageSize] = useState<ImageSize>('twitter')
   const [logo, setLogo] = useState<HTMLImageElement | null>(null)
-  const [textAlign, setTextAlign] = useState<typeof ALIGNMENTS[number]>('center')
-  const [textVertical, setTextVertical] = useState<typeof VERTICAL_POSITIONS[number]>('middle')
-  const [logoAlign, setLogoAlign] = useState<typeof ALIGNMENTS[number]>('center')
-  const [logoVertical, setLogoVertical] = useState<typeof VERTICAL_POSITIONS[number]>('bottom')
+  const [textAlign, setTextAlign] = useState<Alignment>('center')
+  const [textVertical, setTextVertical] = useState<VerticalPosition>('middle')
+  const [logoAlign, setLogoAlign] = useState<Alignment>('center')
+  const [logoVertical, setLogoVertical] = useState<VerticalPosition>('bottom')
 
   useEffect(() => {
     const img = new Image()
@@ -160,7 +163,7 @@ export default function ImageGenerator() {
           </div>
           <div>
             <Label htmlFor="text-align">Text Alignment</Label>
-            <Select value={textAlign} onValueChange={setTextAlign}>
+            <Select value={textAlign} onValueChange={(value: Alignment) => setTextAlign(value)}>
               <SelectTrigger id="text-align">
                 <SelectValue placeholder="Select text alignment" />
               </SelectTrigger>
@@ -173,7 +176,7 @@ export default function ImageGenerator() {
           </div>
           <div>
             <Label htmlFor="text-vertical">Text Vertical Position</Label>
-            <Select value={textVertical} onValueChange={setTextVertical}>
+            <Select value={textVertical} onValueChange={(value: VerticalPosition) => setTextVertical(value)}>
               <SelectTrigger id="text-vertical">
                 <SelectValue placeholder="Select text vertical position" />
               </SelectTrigger>
@@ -186,7 +189,7 @@ export default function ImageGenerator() {
           </div>
           <div>
             <Label htmlFor="logo-align">Logo Alignment</Label>
-            <Select value={logoAlign} onValueChange={setLogoAlign}>
+            <Select value={logoAlign} onValueChange={(value: Alignment) => setLogoAlign(value)}>
               <SelectTrigger id="logo-align">
                 <SelectValue placeholder="Select logo alignment" />
               </SelectTrigger>
@@ -199,7 +202,7 @@ export default function ImageGenerator() {
           </div>
           <div>
             <Label htmlFor="logo-vertical">Logo Vertical Position</Label>
-            <Select value={logoVertical} onValueChange={setLogoVertical}>
+            <Select value={logoVertical} onValueChange={(value: VerticalPosition) => setLogoVertical(value)}>
               <SelectTrigger id="logo-vertical">
                 <SelectValue placeholder="Select logo vertical position" />
               </SelectTrigger>
@@ -210,7 +213,7 @@ export default function ImageGenerator() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleDownload} className="w-full bg-blue-500 hover:bg-blue-700 text-white">Download Image</Button>
+          <Button onClick={handleDownload} className="w-full">Download Image</Button>
         </div>
         <div>
           <canvas
