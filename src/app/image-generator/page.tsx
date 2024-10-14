@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -24,13 +24,7 @@ export default function ImageGenerator() {
     logo.onload = () => setVercelLogo(logo)
   }, [])
 
-  useEffect(() => {
-    if (canvasRef.current && vercelLogo) {
-      drawImage()
-    }
-  }, [text, format, vercelLogo])
-
-  const drawImage = () => {
+  const drawImage = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -54,7 +48,7 @@ export default function ImageGenerator() {
 
     // Draw text in white using Geist font
     ctx.fillStyle = '#ffffff'
-    ctx.font = `${Math.floor(height / 10)}px "Geist", sans-serif`
+    ctx.font = `bold ${Math.floor(height / 10)}px "Geist", sans-serif`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     const maxWidth = width - 40
@@ -73,7 +67,13 @@ export default function ImageGenerator() {
       }
     }
     ctx.fillText(line, width / 2, y)
-  }
+  }, [text, format, vercelLogo])
+
+  useEffect(() => {
+    if (canvasRef.current && vercelLogo) {
+      drawImage()
+    }
+  }, [text, format, vercelLogo, drawImage])
 
   const handleExport = () => {
     const canvas = canvasRef.current
