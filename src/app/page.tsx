@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarDays, FileSpreadsheet, Image, Link as LinkIcon, Mail, MessageSquare } from 'lucide-react'
+import { CalendarDays, Image, Link as LinkIcon, Mail, MessageSquare } from 'lucide-react'
 
 export default function Home() {
   return (
