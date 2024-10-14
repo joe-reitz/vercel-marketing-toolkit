@@ -93,34 +93,28 @@ const customCSS = `
   }
 `;
 
-interface BodyItem {
-  cells: number[];
-  columns: {
-    contents: {
-      type: string;
-      values: {
-        [key: string]: any;
-      };
-    }[];
-  }[];
-  values: {
-    [key: string]: any;
+interface Design {
+  body: {
+    rows: Array<{
+      cells: number[];
+      columns: Array<{
+        contents: Array<{
+          type: string;
+          values: Record<string, unknown>;
+        }>;
+      }>;
+      values: Record<string, unknown>;
+    }>;
+    values: Record<string, unknown>;
+  };
+  counters?: {
+    u_column: number;
+    u_row: number;
+    u_content_text: number;
+    u_content_image: number;
   };
 }
 
-interface Design {
-  id?: string;
-  body: {
-    id?: string;
-    rows: BodyItem[];
-    headers: BodyItem[];
-    footers: BodyItem[];
-    values: {
-      [key: string]: any;
-    };
-  };
-  counters: Record<string, number>;
-}
 
 interface UnlayerEmailEditorProps {
   onSave: (design: object) => void;
@@ -169,14 +163,10 @@ export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEdi
     emailEditorRef.current = { editor: unlayer };
     
     const designWithContentWidth: Design = {
-      id: 'template-id',
       body: {
-        id: 'body-id',
-        rows: (baseTemplate as any).body.rows,
-        headers: [],
-        footers: [],
+        rows: (baseTemplate as Design).body.rows,
         values: {
-          ...(baseTemplate as any).body.values,
+          ...(baseTemplate as Design).body.values,
           contentWidth: 600
         }
       },
@@ -188,7 +178,8 @@ export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEdi
       }
     };
 
-    unlayer.loadDesign(designWithContentWidth as unknown as JSONTemplate);  };
+    unlayer.loadDesign(designWithContentWidth);
+  };
 
   const editorOptions: EmailEditorProps['options'] = {
     features: {
