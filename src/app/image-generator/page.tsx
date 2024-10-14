@@ -83,18 +83,18 @@ export default function ImageGenerator() {
     ctx.textAlign = textAlignment
     ctx.textBaseline = 'middle'
 
-    let fontWeight = fontStyle.includes('bold') ? 'bold' : 'normal'
-    let fontStyleText = fontStyle.includes('italic') ? 'italic' : 'normal'
+    const fontWeight = fontStyle.includes('bold') ? 'bold' : 'normal'
+    const fontStyleText = fontStyle.includes('italic') ? 'italic' : 'normal'
     ctx.font = `${fontWeight} ${fontStyleText} ${Math.floor(height / 10)}px "Geist", sans-serif`
 
     const maxWidth = width - 40
     const words = text.split(' ')
-    let lines = []
+    const lines = []
     let currentLine = words[0]
 
     for (let i = 1; i < words.length; i++) {
-      let testLine = currentLine + ' ' + words[i]
-      let metrics = ctx.measureText(testLine)
+      const testLine = currentLine + ' ' + words[i]
+      const metrics = ctx.measureText(testLine)
       if (metrics.width > maxWidth) {
         lines.push(currentLine)
         currentLine = words[i]
