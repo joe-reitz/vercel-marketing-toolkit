@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import './globals.css'
 import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
@@ -15,10 +14,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${GeistSans.className} bg-vercel-black text-vercel-white`}>
+    <html lang="en" className="dark h-full">
+      <body className={`${GeistSans.className} bg-vercel-black text-vercel-white flex flex-col h-full`}>
         <Navigation />
-        <main className="container mx-auto px-4 py-8">
+        <main className="flex-grow">
           {children}
         </main>
       </body>

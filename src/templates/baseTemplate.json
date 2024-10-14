@@ -1,0 +1,140 @@
+{
+  "body": {
+    "rows": [
+      {
+        "cells": [1],
+        "columns": [
+          {
+            "contents": [
+              {
+                "type": "image",
+                "values": {
+                  "src": {
+                    "url": "https://placehold.co/600x200",
+                    "width": 600,
+                    "height": 200
+                  },
+                  "href": "",
+                  "alt": "Header Image"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "cells": [1],
+        "columns": [
+          {
+            "contents": [
+              {
+                "type": "text",
+                "values": {
+                  "text": "<h1 style='color: #000000; font-family: Geist, Arial, sans-serif; font-size: 24px; font-weight: bold; text-align: center;'>This is a headline</h1>"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "cells": [1],
+        "columns": [
+          {
+            "contents": [
+              {
+                "type": "text",
+                "values": {
+                  "text": "<p style='color: #000000; font-family: Geist, Arial, sans-serif; font-size: 16px; line-height: 1.5;'>This sentence has five words. Here are five more words. Five-word sentences are fine. But several together become monotonous. Listen to what is happening. The writing is getting boring. The sound of it drones. It's like a stuck record. The ear demands some variety.</p></br><p style='color: #000000; font-family: Geist, Arial, sans-serif; font-size: 16px; line-height: 1.5;'>Now listen. I vary the sentence length, and I create music. Music. the writing sings. It has a pleasant rhythm, a lilt, a harmony. I use short sentences. And I use sentences of medium length. And sometimes when I am certain the reader is rested, I will engage them with a sentence of considerable length, a sentence that burns with energy and builds with all the impetus of a crescendo, the roll of the drums, the crash of the cymbals–sounds that say listen to this, it is important.</p></br><p style='color: #000000; font-family: Geist, Arial, sans-serif; font-size: 16px; line-height: 1.5;'>So write with a combination of short, medium, and long sentences. Create a sound that pleases the reader's ear. Don't just write words. Write music.</p>"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "cells": [1],
+        "columns": [
+          {
+            "contents": [
+              {
+                "type": "button",
+                "values": {
+                  "href": "#",
+                  "text": "Call to Action",
+                  "buttonColors": {
+                    "color": "#FFFFFF",
+                    "backgroundColor": "#000000",
+                    "hoverColor": "#000000",
+                    "hoverBackgroundColor": "#ffffff"
+                  },
+                  "size": {
+                    "width": "250px",
+                    "height": "50px"
+                  },
+                  "style": "rounded",
+                  "textAlign": "center",
+                  "lineHeight": "25px",
+                  "font-family": "Geist, Arial, sans-serif"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "cells": [1],
+        "columns": [
+          {
+            "contents": [
+              {
+                "type": "divider",
+                "values": {}
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "cells": [1],
+        "columns": [
+          {
+            "contents": [
+              {
+                "type": "html",
+                "values": {
+                  "html": "<table width='70' cellpadding='0' cellspacing='0' align='center' style='mso-table-lspace: 0pt !important; mso-table-rspace: 0pt !important;'><tbody><tr><td width='25'><a href='https://twitter.com/vercel' target='_blank'><img class='light-img' alt='Twitter' src='https://go.vercel.com/rs/001-LRG-194/images/x-light.png?version=0' width='25' height='25' border='0' style='height: auto !important; -ms-interpolation-mode: bicubic !important; max-width: 25px; max-height: 25px;' /><div class='dark-img' style='display:none; overflow:hidden; float:left; width:0px; max-height:0px; max-width:0px; line-height:0px; visibility:hidden;' align='center'><img alt='Twitter' src='https://go.vercel.com/rs/001-LRG-194/images/x-dark.png?version=0' width='25' height='25' border='0' style='height: auto !important; -ms-interpolation-mode: bicubic !important; max-width: 25px; max-height: 25px;' /></div></a></td><td width='20'></td><td width='25'><a href='https://github.com/vercel' target='_blank'><img class='light-img' alt='GitHub' src='https://go.vercel.com/rs/001-LRG-194/images/GitHub-light.png?version=0' width='25' height='25' border='0' style='height: auto !important; -ms-interpolation-mode: bicubic !important; max-width: 25px; max-height: 25px;' /><div class='dark-img' style='display:none; overflow:hidden; float:left; width:0px; max-height:0px; max-width:0px; line-height:0px; visibility:hidden;' align='center'><img alt='GitHub' src='https://go.vercel.com/rs/001-LRG-194/images/GitHub-dark.png?version=0' width='25' height='25' border='0' style='height: auto !important; -ms-interpolation-mode: bicubic !important; max-width: 25px; max-height: 25px;' /></div></a></td></tr></tbody></table>"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "cells": [1],
+        "columns": [
+          {
+            "contents": [
+              {
+                "type": "text",
+                "values": {
+                  "text": "<p style='text-align: center; font-family: Geist, Arial, sans-serif; font-size: 12px; line-height: 1.5;'><a href='https://vercel.com/contact/sales' target='_blank' style='color: #a1a1a1; text-decoration: none; font-weight: 500; font-family: Geist, Arial, sans-serif;' class='mktNoTok'>Talk to a Vercel expert &rarr;</a><br /> <a class='dkmode mktNoTok' href='https://vercel.com/docs' target='_blank' style='color: #a1a1a1; text-decoration: none; font-weight: 500; font-family: Geist, Arial, sans-serif;'>Docs</a> | <a class='dkmode mktNoTok' href='https://vercel.com/blog' target='_blank' style='color: #a1a1a1; text-decoration: none; font-weight: 500; font-family: Geist, Arial, sans-serif;'>Blog</a> | <a class='dkmode mktNoTok' href='https://vercel.com/contact' target='_blank' style='color: #a1a1a1; text-decoration: none; font-weight: 500; font-family: Geist, Arial, sans-serif;'>Contact</a> | <a class='dkmode mktNoTok' href='https://vercel.com/careers' target='_blank' style='color: #a1a1a1; text-decoration: none; font-weight: 500; font-family: Geist, Arial, sans-serif;'>Careers</a> <br /> <span style='color: #a1a1a1; text-decoration: none; font-family: Geist, Arial, sans-serif;'>440 N Barranca Ave #4133 Covina, CA 91723<br />Copyright &copy; 2024 Vercel Inc. All rights reserved.<br />View our</span> <span style='color: #a1a1a1; text-decoration: underline; font-family: Geist, Arial, sans-serif;'><a class='dkmode mktNoTok' href='https://vercel.com/legal/privacy-policy' target='_blank' style='color: #a1a1a1; text-decoration: underline; font-weight: 500; font-family: Geist, Arial, sans-serif;'>Privacy Policy</a></span> <span style='color: #a1a1a1; text-decoration: none; font-family: Geist, Arial, sans-serif;'>or</span> <span style='text-decoration: underline; font-family: Geist, Arial, sans-serif;'><a class='dkmode' href='https://vercel.com/communications-center?email={{lead.Email Address}}' target='_blank' style='color: #a1a1a1; text-decoration: underline; font-weight: 500; font-family: Geist, Arial, sans-serif;'>unsubscribe</a></span>.</p>"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "counters": {
+    "u_row": 8,
+    "u_column": 8,
+    "u_content_text": 5,
+    "u_content_image": 1,
+    "u_content_button": 1,
+    "u_content_divider": 1,
+    "u_content_html": 1
+  },
+  "schemaVersion": 6
+}
