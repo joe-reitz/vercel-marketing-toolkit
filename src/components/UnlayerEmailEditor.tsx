@@ -40,9 +40,8 @@ type JSONTemplate = {
   };
   counters?: Record<string, number>;
 };
-
 // Ensure baseTemplate conforms to the JSONTemplate type
-const typedBaseTemplate: JSONTemplate = baseTemplate as JSONTemplate;
+const typedBaseTemplate: JSONTemplate = baseTemplate as unknown as JSONTemplate;
 
 // Consider moving this to a separate CSS file for better organization
 const customCSS = `
@@ -191,7 +190,7 @@ export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEdi
       }
     };
 
-    unlayer.loadDesign(designWithContentWidth);
+    unlayer.loadDesign(designWithContentWidth as import("state/types/types").JSONTemplate);
   };
 
   const editorOptions: EmailEditorProps['options'] = {
