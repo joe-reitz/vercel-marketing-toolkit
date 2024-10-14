@@ -106,12 +106,7 @@ interface Design {
     }>;
     values: Record<string, unknown>;
   };
-  counters?: {
-    u_column: number;
-    u_row: number;
-    u_content_text: number;
-    u_content_image: number;
-  };
+  counters: Record<string, number>;
 }
 
 
