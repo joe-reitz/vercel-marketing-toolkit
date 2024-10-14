@@ -203,7 +203,7 @@ export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEdi
       }
     },
     appearance: {
-      theme: 'light',
+      theme: 'dark',
       panels: {
         tools: {
           dock: 'right'
