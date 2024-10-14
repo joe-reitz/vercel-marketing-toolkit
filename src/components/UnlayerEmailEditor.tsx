@@ -184,7 +184,7 @@ export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEdi
       }
     };
 
-    unlayer.loadDesign(designWithContentWidth);
+    unlayer.loadDesign(designWithContentWidth as any);
   };
 
   const editorOptions: EmailEditorProps['options'] = {
