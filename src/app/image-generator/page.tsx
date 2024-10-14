@@ -31,7 +31,7 @@ export default function ImageGenerator() {
 
   useEffect(() => {
     const logo = new Image()
-    logo.src = '/vercel-logotype-light.svg'
+    logo.src = '/src/app/image-generator/vercel-logotype-light.svg';
     logo.onload = () => setVercelLogo(logo)
   }, [])
 
