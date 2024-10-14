@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarDays, FileSpreadsheet, Image, Link as LinkIcon, Mail, MessageSquare } from 'lucide-react'
+import { CalendarDays, Image, Link as LinkIcon, Mail, MessageSquare } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -13,7 +13,6 @@ export default function Home() {
             { href: '/utm-generator', icon: LinkIcon, title: 'UTM Parameter Generator' },
             { href: '/email-builder', icon: Mail, title: 'Email Builder' },
             { href: '/image-generator', icon: Image, title: 'Image Generator' },
-            { href: '/csv-sorter', icon: FileSpreadsheet, title: 'CSV Sorter' },
           ].map(({ href, icon: Icon, title }) => (
             <Link
               key={href}
