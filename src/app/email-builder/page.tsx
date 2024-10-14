@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
+import { toast } from 'react-hot-toast'
+import { saveAs } from 'file-saver'
 
 const UnlayerEmailEditor = dynamic(() => import('@/components/UnlayerEmailEditor'), { ssr: false })
 
@@ -11,20 +13,30 @@ export default function EmailBuilderPage() {
 
   const handleSave = (design: object) => {
     setSavedDesign(design)
+    const json = JSON.stringify(design)
+    const blob = new Blob([json], { type: 'application/json' })
+    saveAs(blob, 'email_design.json')
+    toast.success('Design saved successfully!')
     console.log('Design saved:', design)
-    // Here you can implement logic to save the design to your backend or local storage
   }
 
   const handleExport = ({ html, design }: { html: string; design: object }) => {
     setExportedHtml(html)
+    const blob = new Blob([html], { type: 'text/html' })
+    saveAs(blob, 'email_template.html')
+    toast.success('HTML exported successfully!')
     console.log('HTML exported:', html)
     console.log('Final design:', design)
-    // Here you can implement logic to use the exported HTML, e.g., send it to your backend or copy to clipboard
   }
 
   return (
-    <div className="h-full">
-      <UnlayerEmailEditor onSave={handleSave} onExport={handleExport} />
+    <div className="h-screen flex flex-col">
+      <div className="flex-grow">
+        <UnlayerEmailEditor 
+          onSave={handleSave} 
+          onExport={handleExport} 
+        />
+      </div>
     </div>
   )
 }

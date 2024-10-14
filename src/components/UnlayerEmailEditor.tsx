@@ -1,50 +1,75 @@
 import React, { useRef, useState } from 'react';
 import EmailEditor, { EditorRef, EmailEditorProps } from 'react-email-editor';
 import { Button } from "@/components/ui/button"
-import { saveAs } from 'file-saver';
-import baseTemplate from '../templates/baseTemplate.json';
 import { Save, Download, Copy } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import baseTemplate from '../templates/baseTemplate.json';
 
 const customCSS = `
   @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;600&display=swap');
 
-  body {
-    font-family: 'Geist', Arial, sans-serif;
-  }
+  /* CLIENT-SPECIFIC STYLES */
+  img{-ms-interpolation-mode: bicubic;} 
+  /* Force IE to smoothly render resized images. */
+  #outlook a{padding:0;} 
+  /* Force Outlook 2007 and up to provide a "view in browser" message. */
+  table{mso-table-lspace:0pt;mso-table-rspace:0pt;} 
+  /* Remove spacing between tables in Outlook 2007 and up. */
+  .ReadMsgBody{width:100%;} 
+  .ExternalClass{width:100%;} 
+  /* Force Outlook.com to display emails at full width. */
+  p, a, li, td, blockquote{mso-line-height-rule:exactly;} 
+  /* Force Outlook to render line heights as they're originally set. */
+  a[href^="tel"], a[href^="sms"]{color:inherit;cursor:default; text-decoration:none;} 
+  /* Force mobile devices to inherit declared link styles. */
+  p, a, li, td, body, table, blockquote{-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;} 
+  /* Prevent Windows- and Webkit-based mobile platforms from changing declared text sizes. */
+  .ExternalClass, .ExternalClass p, .ExternalClass td, .ExternalClass div, .ExternalClass span, .ExternalClass font{line-height:100%;}
+  /* Force Outlook.com to display line heights normally. */
+  table{border-collapse:collapse;}
 
-  .darkmode {
-    background-color: #000000 !important;
-    color: #ffffff !important;
+  html {
+    -webkit-text-size-adjust: none;
   }
+  a {
+    font-weight: bold;
+    color: #0070f3;
+    text-decoration:none;
+  }
+  #titlemodtxt{
+    letter-spacing: -4px;
+    font-weight: 600;
+  }
+  ul li { margin-bottom: 10px; }
+  ol li { margin-bottom: 10px; }
 
   @media (prefers-color-scheme: dark) {
-    .mktoText p, div.mktoText, .mktoText div {
-      color: #ffffff !important;
+    p, div {
+      color:#ffffff!important;
     }
     .dark-img {
-      display: inline-block !important;
+      display:inline-block !important;
       width: auto !important;
       overflow: visible !important;
-      max-height: inherit !important;
-      max-width: inherit !important;
+      max-height:inherit !important;
+      max-width:inherit !important;
       line-height: auto !important;
-      margin-top: 0px !important;
-      visibility: inherit !important;
+      margin-top:0px !important;
+      visibility:inherit !important;
     }
     .light-img {
-      display: none !important;
+      display:none !important;
     }
     .darkmode {
-      background-color: #000000 !important;
-      background: #000000 !important;
+      background-color:#000000!important;
+      background:#000000!important;
     }
     .darkmodebg {
-      background-color: #000000 !important;
-      background: #000000 !important;
+      background-color:#000000!important;
+      background:#000000!important;
     }
-    .dklinkclr {
-      color: #ffffff !important;
+    .dklinkclr{
+      color:#ffffff!important;
     }
   }
 
@@ -61,41 +86,72 @@ const customCSS = `
     .top_pad { padding-top: 20px !important; }
     .top_pad1 { padding-top: 30px !important; }
     .mobileimg { width: 100% !important; height: auto !important; }
-    .imgmaxwidth { width: 100% !important; height: auto !important; }
-    .navtxt { font-size: 12px !important; }
+    .imgmaxwidth {width: 100% !important; height: auto !important;}
+    .navtxt{
+      font-size: 12px !important;
+    }
   }
 `;
 
-export default function EmailBuilder() {
+interface BodyItem {
+  cells: number[];
+  columns: {
+    contents: {
+      type: string;
+      values: {
+        [key: string]: any;
+      };
+    }[];
+  }[];
+  values: {
+    [key: string]: any;
+  };
+}
+
+interface Design {
+  id?: string;
+  body: {
+    id?: string;
+    rows: BodyItem[];
+    headers: BodyItem[];
+    footers: BodyItem[];
+    values: {
+      [key: string]: any;
+    };
+  };
+  counters: Record<string, number>;
+}
+
+interface UnlayerEmailEditorProps {
+  onSave: (design: object) => void;
+  onExport: ({ html, design }: { html: string; design: object }) => void;
+}
+
+export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEditorProps) {
   const emailEditorRef = useRef<EditorRef | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const saveDesign = () => {
     setIsLoading(true);
-    emailEditorRef.current?.saveDesign((design) => {
-      const json = JSON.stringify(design);
-      const blob = new Blob([json], { type: 'application/json' });
-      saveAs(blob, 'email_design.json');
+    emailEditorRef.current?.editor?.saveDesign((design: Design) => {
+      onSave(design);
       setIsLoading(false);
-      toast.success('Design saved successfully!');
     });
   };
 
   const exportHtml = () => {
     setIsLoading(true);
-    emailEditorRef.current?.exportHtml((data) => {
-      const { html } = data;
+    emailEditorRef.current?.editor?.exportHtml((data: { html: string; design: object }) => {
+      const { html, design } = data;
       const htmlWithCustomCSS = html.replace('</head>', `<style>${customCSS}</style></head>`);
-      const blob = new Blob([htmlWithCustomCSS], { type: 'text/html' });
-      saveAs(blob, 'email_template.html');
+      onExport({ html: htmlWithCustomCSS, design });
       setIsLoading(false);
-      toast.success('HTML exported successfully!');
     });
   };
 
   const copyFullCode = () => {
     setIsLoading(true);
-    emailEditorRef.current?.exportHtml((data) => {
+    emailEditorRef.current?.editor?.exportHtml((data: { html: string }) => {
       const { html } = data;
       const htmlWithCustomCSS = html.replace('</head>', `<style>${customCSS}</style></head>`);
       navigator.clipboard.writeText(htmlWithCustomCSS).then(() => {
@@ -110,33 +166,37 @@ export default function EmailBuilder() {
   };
 
   const onReady: EmailEditorProps['onReady'] = (unlayer) => {
-    emailEditorRef.current = unlayer;
+    emailEditorRef.current = { editor: unlayer };
     
-    // Merge the base template with the content width setting
-    const designWithContentWidth = {
-      ...baseTemplate,
+    const designWithContentWidth: Design = {
+      id: 'template-id',
       body: {
-        ...baseTemplate.body,
+        id: 'body-id',
+        rows: (baseTemplate as any).body.rows,
+        headers: [],
+        footers: [],
         values: {
-          ...baseTemplate.body?.values,
+          ...(baseTemplate as any).body.values,
           contentWidth: 600
         }
+      },
+      counters: {
+        u_column: 0,
+        u_row: 0,
+        u_content_text: 0,
+        u_content_image: 0,
       }
     };
 
-    // Load the modified design
-    unlayer.loadDesign(designWithContentWidth);
-  };
+    unlayer.loadDesign(designWithContentWidth as unknown as JSONTemplate);  };
 
-  const editorOptions = {
+  const editorOptions: EmailEditorProps['options'] = {
     features: {
       textEditor: {
-        fonts: {
-          showDefaultFonts: false,
-          customFonts: [
-            { label: 'Geist', value: 'Geist, Arial, sans-serif' }
-          ]
-        }
+        spellChecker: true,
+        tables: true,
+        cleanPaste: true,
+        emojis: true,
       }
     },
     appearance: {
@@ -160,19 +220,21 @@ export default function EmailBuilder() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="flex justify-end space-x-2 p-4 bg-gray-100">
-        <Button className="bg-green-500 text-white" onClick={saveDesign} disabled={isLoading}>
-          <Save className="w-4 h-4 mr-2" />
-          {isLoading ? 'Saving...' : 'Save Design'}
-        </Button>
-        <Button className="bg-blue-500 text-white" onClick={exportHtml} disabled={isLoading}>
-          <Download className="w-4 h-4 mr-2" />
-          {isLoading ? 'Exporting...' : 'Export HTML'}
-        </Button>
-        <Button className="bg-black text-white" onClick={copyFullCode} disabled={isLoading}>
-          <Copy className="w-4 h-4 mr-2" />
-          {isLoading ? 'Copying...' : 'Copy Full Code'}
-        </Button>
+      <div className="flex justify-end items-center p-4 bg-gray-100">
+        <div className="flex space-x-2">
+          <Button className="bg-green-500 text-white hover:bg-green-700" onClick={saveDesign} disabled={isLoading}>
+            <Save className="w-4 h-4 mr-2" />
+            {isLoading ? 'Saving...' : 'Save Design'}
+          </Button>
+          <Button className="bg-blue-500 text-white hover:bg-blue-700" onClick={exportHtml} disabled={isLoading}>
+            <Download className="w-4 h-4 mr-2" />
+            {isLoading ? 'Exporting...' : 'Export HTML'}
+          </Button>
+          <Button className="bg-black text-white hover:bg-gray-600" onClick={copyFullCode} disabled={isLoading}>
+            <Copy className="w-4 h-4 mr-2" />
+            {isLoading ? 'Copying...' : 'Copy Full Code'}
+          </Button>
+        </div>
       </div>
       <div className="flex-grow relative">
         <EmailEditor
