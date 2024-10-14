@@ -103,7 +103,6 @@ interface Design {
           values: Record<string, unknown>;
         }>;
       }>;
-      values: Record<string, unknown>;
     }>;
     values: Record<string, unknown>;
   };
@@ -164,9 +163,9 @@ export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEdi
     
     const designWithContentWidth: Design = {
       body: {
-        rows: (baseTemplate as Design).body.rows,
+        rows: (baseTemplate as unknown as Design).body.rows,
         values: {
-          ...(baseTemplate as Design).body.values,
+          ...(baseTemplate as unknown as Design).body.values,
           contentWidth: 600
         }
       },
