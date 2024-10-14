@@ -5,6 +5,45 @@ import { Save, Download, Copy } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import baseTemplate from '../templates/baseTemplate.json';
 
+// Define more specific types
+type BodyItem = {
+  id?: string;
+  cells: number[];
+  columns: Array<{
+    contents: Array<{
+      type: string;
+      values: Record<string, unknown>;
+    }>;
+  }>;
+  values?: Record<string, unknown>;
+};
+
+type Design = {
+  body: {
+    id?: string;
+    rows: BodyItem[];
+    headers?: BodyItem[];
+    footers?: BodyItem[];
+    values: Record<string, unknown>;
+  };
+  counters: Record<string, number>;
+};
+
+// Define JSONTemplate type to match the expected structure
+type JSONTemplate = {
+  body: {
+    id?: string;
+    rows: BodyItem[];
+    headers?: BodyItem[];
+    footers?: BodyItem[];
+    values: Record<string, unknown>;
+  };
+  counters?: Record<string, number>;
+};
+
+// Ensure baseTemplate conforms to the JSONTemplate type
+const typedBaseTemplate: JSONTemplate = baseTemplate as JSONTemplate;
+
 // Consider moving this to a separate CSS file for better organization
 const customCSS = `
   @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;600&display=swap');
@@ -86,32 +125,9 @@ const customCSS = `
   }
 `;
 
-interface BodyItem {
-  id: string;
-  cells: number[];
-  columns: Array<{
-    contents: Array<{
-      type: string;
-      values: Record<string, unknown>;
-    }>;
-  }>;
-  values: Record<string, unknown>;
-}
-
-interface Design {
-  body: {
-    id: string | undefined;
-    rows: BodyItem[];
-    headers: BodyItem[];
-    footers: BodyItem[];
-    values: Record<string, unknown>;
-  };
-  counters: Record<string, number>;
-}
-
 interface UnlayerEmailEditorProps {
-  onSave: (design: object) => void;
-  onExport: ({ html, design }: { html: string; design: object }) => void;
+  onSave: (design: Design) => void;
+  onExport: ({ html, design }: { html: string; design: Design }) => void;
 }
 
 export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEditorProps) {
@@ -128,7 +144,7 @@ export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEdi
 
   const exportHtml = () => {
     setIsLoading(true);
-    emailEditorRef.current?.editor?.exportHtml((data: { html: string; design: object }) => {
+    emailEditorRef.current?.editor?.exportHtml((data: { html: string; design: Design }) => {
       const { html, design } = data;
       const htmlWithCustomCSS = html.replace('</head>', `<style>${customCSS}</style></head>`);
       onExport({ html: htmlWithCustomCSS, design });
@@ -155,21 +171,19 @@ export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEdi
   const onReady: EmailEditorProps['onReady'] = (unlayer) => {
     emailEditorRef.current = { editor: unlayer };
     
-    const designWithContentWidth: Design = {
+    const designWithContentWidth: JSONTemplate = {
       body: {
-        id: 'body-id',
-        rows: (baseTemplate as any).body.rows.map((row: any) => ({
+        ...typedBaseTemplate.body,
+        rows: typedBaseTemplate.body.rows.map((row: BodyItem) => ({
           ...row,
           id: `row-${Math.random().toString(36).substr(2, 9)}`,
         })),
-        headers: [],
-        footers: [],
         values: {
-          ...(baseTemplate as any).body.values,
+          ...typedBaseTemplate.body.values,
           contentWidth: 600
         }
       },
-      counters: {
+      counters: typedBaseTemplate.counters || {
         u_column: 0,
         u_row: 0,
         u_content_text: 0,
@@ -177,7 +191,7 @@ export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEdi
       }
     };
 
-    unlayer.loadDesign(designWithContentWidth as any);
+    unlayer.loadDesign(designWithContentWidth);
   };
 
   const editorOptions: EmailEditorProps['options'] = {
