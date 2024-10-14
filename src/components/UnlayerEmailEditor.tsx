@@ -93,22 +93,28 @@ const customCSS = `
   }
 `;
 
+interface BodyItem {
+  id: string;
+  cells: number[];
+  columns: Array<{
+    contents: Array<{
+      type: string;
+      values: Record<string, unknown>;
+    }>;
+  }>;
+  values: Record<string, unknown>;
+}
+
 interface Design {
   body: {
-    rows: Array<{
-      cells: number[];
-      columns: Array<{
-        contents: Array<{
-          type: string;
-          values: Record<string, unknown>;
-        }>;
-      }>;
-    }>;
+    id: string | undefined;
+    rows: BodyItem[];
+    headers: BodyItem[];
+    footers: BodyItem[];
     values: Record<string, unknown>;
   };
   counters: Record<string, number>;
 }
-
 
 interface UnlayerEmailEditorProps {
   onSave: (design: object) => void;
@@ -158,9 +164,15 @@ export default function UnlayerEmailEditor({ onSave, onExport }: UnlayerEmailEdi
     
     const designWithContentWidth: Design = {
       body: {
-        rows: (baseTemplate as unknown as Design).body.rows,
+        id: 'body-id',
+        rows: (baseTemplate as any).body.rows.map((row: any) => ({
+          ...row,
+          id: `row-${Math.random().toString(36).substr(2, 9)}`,
+        })),
+        headers: [],
+        footers: [],
         values: {
-          ...(baseTemplate as unknown as Design).body.values,
+          ...(baseTemplate as any).body.values,
           contentWidth: 600
         }
       },
