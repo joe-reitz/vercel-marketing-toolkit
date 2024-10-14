@@ -5,27 +5,20 @@ import { Save, Download, Copy } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import baseTemplate from '../templates/baseTemplate.json';
 
+// Consider moving this to a separate CSS file for better organization
 const customCSS = `
   @import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;600&display=swap');
 
   /* CLIENT-SPECIFIC STYLES */
   img{-ms-interpolation-mode: bicubic;} 
-  /* Force IE to smoothly render resized images. */
   #outlook a{padding:0;} 
-  /* Force Outlook 2007 and up to provide a "view in browser" message. */
   table{mso-table-lspace:0pt;mso-table-rspace:0pt;} 
-  /* Remove spacing between tables in Outlook 2007 and up. */
   .ReadMsgBody{width:100%;} 
   .ExternalClass{width:100%;} 
-  /* Force Outlook.com to display emails at full width. */
   p, a, li, td, blockquote{mso-line-height-rule:exactly;} 
-  /* Force Outlook to render line heights as they're originally set. */
   a[href^="tel"], a[href^="sms"]{color:inherit;cursor:default; text-decoration:none;} 
-  /* Force mobile devices to inherit declared link styles. */
   p, a, li, td, body, table, blockquote{-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;} 
-  /* Prevent Windows- and Webkit-based mobile platforms from changing declared text sizes. */
   .ExternalClass, .ExternalClass p, .ExternalClass td, .ExternalClass div, .ExternalClass span, .ExternalClass font{line-height:100%;}
-  /* Force Outlook.com to display line heights normally. */
   table{border-collapse:collapse;}
 
   html {
