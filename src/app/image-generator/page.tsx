@@ -13,8 +13,8 @@ import {
 } from '@/components/ui/select'
 
 const LOGO_OPTIONS = {
-  'vercel-logotype': { src: '/vercel-logotype-light.svg', alt: 'Vercel Logotype' },
-  'vercel-icon': { src: '/vercel-icon-light.svg', alt: 'Vercel Icon' },
+  'vercel-logotype': { src: '/images/vercel-logotype-light.svg', alt: 'Vercel Logotype' },
+  'vercel-icon': { src: '/images/vercel-icon-light.svg', alt: 'Vercel Icon' },
 }
 
 type LogoOption = keyof typeof LOGO_OPTIONS
