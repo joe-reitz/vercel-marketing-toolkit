@@ -46,8 +46,8 @@ export default function ImageGenerator() {
   const [logo, setLogo] = useState<HTMLImageElement | null>(null)
   const [textAlign, setTextAlign] = useState<Alignment>('center')
   const [textVertical, setTextVertical] = useState<VerticalPosition>('middle')
-  const [logoAlign, setLogoAlign] = useState<Alignment>('center')
-  const [logoVertical, setLogoVertical] = useState<VerticalPosition>('bottom')
+  const [logoAlign, setLogoAlign] = useState<Alignment>('left')
+  const [logoVertical, setLogoVertical] = useState<VerticalPosition>('top')
 
   useEffect(() => {
     const img = new Image()
