@@ -97,27 +97,25 @@ export default function ImageGenerator() {
 
     const lineHeight = fontSize * 1.2
     const totalTextHeight = lines.length * lineHeight
-    let [textX, textY] = getPosition(textPosition, width, height, maxWidth, totalTextHeight)
+    const [textX, textY] = getPosition(textPosition, width, height, maxWidth, totalTextHeight)
 
     // Adjust textX for left/right alignment
-    if (textPosition.includes('left')) {
-      textX = padding
-    } else if (textPosition.includes('right')) {
-      textX = width - padding
-    }
+    const adjustedTextX = textPosition.includes('left') ? padding : 
+                          textPosition.includes('right') ? width - padding : 
+                          textX
 
     ctx.textAlign = textPosition.includes('center') ? 'center' : textPosition.includes('right') ? 'right' : 'left'
 
     lines.forEach((line, index) => {
-      ctx.fillText(line, textX, textY + index * lineHeight - (totalTextHeight / 2) + (lineHeight / 2))
+      ctx.fillText(line, adjustedTextX, textY + index * lineHeight - (totalTextHeight / 2) + (lineHeight / 2))
     })
-  }, [text, format, vercelLogo, textPosition, fontStyle, logoPosition, logoType, isDarkMode, logoSize, textSize])
+  }, [text, format, vercelLogo, textPosition, fontStyle, logoPosition, isDarkMode, logoSize, textSize])
 
   useEffect(() => {
     if (canvasRef.current) {
       drawImage()
     }
-  }, [text, format, vercelLogo, drawImage, textPosition, fontStyle, logoPosition, logoType, isDarkMode, logoSize, textSize])
+  }, [drawImage])
 
   const handleExport = () => {
     const canvas = canvasRef.current
@@ -190,7 +188,7 @@ export default function ImageGenerator() {
         placeholder="Enter your text here"
         className="w-full max-w-md"
       />
-      <Select value={format} onValueChange={setFormat}>
+      <Select value={format} onValueChange={(value: string) => setFormat(value)}>
         <SelectTrigger className="w-full max-w-md">
           <SelectValue placeholder="Select image format" />
         </SelectTrigger>
@@ -204,12 +202,12 @@ export default function ImageGenerator() {
       <div className="grid grid-cols-2 gap-4 w-full max-w-md">
         <div>
           <Label className="mb-2 block">Text Position</Label>
-          <Select value={textPosition} onValueChange={setTextPosition}>
+          <Select value={textPosition} onValueChange={(value: Position) => setTextPosition(value)}>
             <SelectTrigger>
               <SelectValue placeholder="Select text position" />
             </SelectTrigger>
             <SelectContent>
-              {['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'].map((pos) => (
+              {(['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'] as const).map((pos) => (
                 <SelectItem key={pos} value={pos}>{pos.replace('-', ' ')}</SelectItem>
               ))}
             </SelectContent>
@@ -217,7 +215,7 @@ export default function ImageGenerator() {
         </div>
         <div>
           <Label className="mb-2 block">Font Style</Label>
-          <Select value={fontStyle} onValueChange={setFontStyle}>
+          <Select value={fontStyle} onValueChange={(value: FontStyle) => setFontStyle(value)}>
             <SelectTrigger>
               <SelectValue placeholder="Select font style" />
             </SelectTrigger>
@@ -230,12 +228,12 @@ export default function ImageGenerator() {
         </div>
         <div>
           <Label className="mb-2 block">Logo Position</Label>
-          <Select value={logoPosition} onValueChange={setLogoPosition}>
+          <Select value={logoPosition} onValueChange={(value: Position) => setLogoPosition(value)}>
             <SelectTrigger>
               <SelectValue placeholder="Select logo position" />
             </SelectTrigger>
             <SelectContent>
-              {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map((pos) => (
+              {(['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const).map((pos) => (
                 <SelectItem key={pos} value={pos}>{pos.replace('-', ' ')}</SelectItem>
               ))}
             </SelectContent>
@@ -243,7 +241,7 @@ export default function ImageGenerator() {
         </div>
         <div>
           <Label className="mb-2 block">Logo Type</Label>
-          <Select value={logoType} onValueChange={setLogoType}>
+          <Select value={logoType} onValueChange={(value: LogoType) => setLogoType(value)}>
             <SelectTrigger>
               <SelectValue placeholder="Select logo type" />
             </SelectTrigger>
