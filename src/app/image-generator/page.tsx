@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Switch } from "@/components/ui/switch"
 
 const IMAGE_FORMATS = {
   'og': { width: 1200, height: 630 },
@@ -14,26 +14,32 @@ const IMAGE_FORMATS = {
   'email-large': { width: 600, height: 400 },
 }
 
-type TextPosition = 'top' | 'middle' | 'bottom'
-type TextAlignment = 'left' | 'center' | 'right'
+type Position = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-center' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right'
 type FontStyle = 'regular' | 'bold' | 'bold italic'
-type LogoPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
+type LogoType = 'logotype' | 'icon'
+
+const BASE_URL = 'https://d1x0zcqhnlqelh.cloudfront.net/images/69d2b268e16ef23a7e81dd3abc50ec84/Vercel%20Logos/'
 
 export default function ImageGenerator() {
   const [text, setText] = useState('')
   const [format, setFormat] = useState('og')
-  const [textPosition, setTextPosition] = useState<TextPosition>('middle')
-  const [textAlignment, setTextAlignment] = useState<TextAlignment>('center')
+  const [textPosition, setTextPosition] = useState<Position>('middle-center')
   const [fontStyle, setFontStyle] = useState<FontStyle>('bold')
-  const [logoPosition, setLogoPosition] = useState<LogoPosition>('top-left')
+  const [logoPosition, setLogoPosition] = useState<Position>('top-left')
+  const [logoType, setLogoType] = useState<LogoType>('logotype')
+  const [isDarkMode, setIsDarkMode] = useState(true)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [vercelLogo, setVercelLogo] = useState<HTMLImageElement | null>(null)
 
   useEffect(() => {
-    const logo = new Image()
-    logo.src = '/vercel-logotype-light.svg'
-    logo.onload = () => setVercelLogo(logo)
-  }, [])
+    const loadImage = () => {
+      const img = new Image()
+      img.src = `${BASE_URL}vercel-${logoType}-${isDarkMode ? 'light' : 'dark'}.png`
+      img.onload = () => setVercelLogo(img)
+    }
+
+    loadImage()
+  }, [logoType, isDarkMode])
 
   const drawImage = useCallback(() => {
     const canvas = canvasRef.current
@@ -46,48 +52,29 @@ export default function ImageGenerator() {
     canvas.width = width
     canvas.height = height
 
-    // Set background to black
-    ctx.fillStyle = '#000000'
+    // Set background
+    ctx.fillStyle = isDarkMode ? '#000000' : '#ffffff'
     ctx.fillRect(0, 0, width, height)
 
     // Draw Vercel logo
     if (vercelLogo) {
       const logoHeight = Math.min(height / 4, 50)
       const logoWidth = (logoHeight / vercelLogo.height) * vercelLogo.width
-      let logoX, logoY
-
-      switch (logoPosition) {
-        case 'top-left':
-          logoX = 20
-          logoY = 20
-          break
-        case 'top-right':
-          logoX = width - logoWidth - 20
-          logoY = 20
-          break
-        case 'bottom-left':
-          logoX = 20
-          logoY = height - logoHeight - 20
-          break
-        case 'bottom-right':
-          logoX = width - logoWidth - 20
-          logoY = height - logoHeight - 20
-          break
-      }
-
+      const [logoX, logoY] = getPosition(logoPosition, width, height, logoWidth, logoHeight)
       ctx.drawImage(vercelLogo, logoX, logoY, logoWidth, logoHeight)
     }
 
     // Draw text
-    ctx.fillStyle = '#ffffff'
-    ctx.textAlign = textAlignment
+    ctx.fillStyle = isDarkMode ? '#ffffff' : '#000000'
     ctx.textBaseline = 'middle'
 
     const fontWeight = fontStyle.includes('bold') ? 'bold' : 'normal'
     const fontStyleText = fontStyle.includes('italic') ? 'italic' : 'normal'
-    ctx.font = `${fontWeight} ${fontStyleText} ${Math.floor(height / 10)}px "Geist", sans-serif`
+    const fontSize = Math.floor(height / 15)
+    ctx.font = `${fontWeight} ${fontStyleText} ${fontSize}px Arial, sans-serif`
 
-    const maxWidth = width - 40
+    const padding = Math.floor(width / 20)
+    const maxWidth = width - (padding * 2)
     const words = text.split(' ')
     const lines = []
     let currentLine = words[0]
@@ -104,43 +91,29 @@ export default function ImageGenerator() {
     }
     lines.push(currentLine)
 
-    let y
-    switch (textPosition) {
-      case 'top':
-        y = height * 0.2
-        break
-      case 'middle':
-        y = height / 2 - (lines.length - 1) * Math.floor(height / 20) / 2
-        break
-      case 'bottom':
-        y = height * 0.8 - (lines.length - 1) * Math.floor(height / 20)
-        break
+    const lineHeight = Math.floor(height / 15)
+    const totalTextHeight = lines.length * lineHeight
+    let [textX, textY] = getPosition(textPosition, width, height, maxWidth, totalTextHeight)
+
+    // Adjust textX for left/right alignment
+    if (textPosition.includes('left')) {
+      textX = padding
+    } else if (textPosition.includes('right')) {
+      textX = width - padding
     }
 
-    let x
-    switch (textAlignment) {
-      case 'left':
-        x = 20
-        break
-      case 'center':
-        x = width / 2
-        break
-      case 'right':
-        x = width - 20
-        break
-    }
+    ctx.textAlign = textPosition.includes('center') ? 'center' : textPosition.includes('right') ? 'right' : 'left'
 
-    for (let i = 0; i < lines.length; i++) {
-      ctx.fillText(lines[i], x, y)
-      y += Math.floor(height / 20)
-    }
-  }, [text, format, vercelLogo, textPosition, textAlignment, fontStyle, logoPosition])
+    lines.forEach((line, index) => {
+      ctx.fillText(line, textX, textY + index * lineHeight - (totalTextHeight / 2) + (lineHeight / 2))
+    })
+  }, [text, format, vercelLogo, textPosition, fontStyle, logoPosition, logoType, isDarkMode])
 
   useEffect(() => {
-    if (canvasRef.current && vercelLogo) {
+    if (canvasRef.current) {
       drawImage()
     }
-  }, [text, format, vercelLogo, drawImage, textPosition, textAlignment, fontStyle, logoPosition])
+  }, [text, format, vercelLogo, drawImage, textPosition, fontStyle, logoPosition, logoType, isDarkMode])
 
   const handleExport = () => {
     const canvas = canvasRef.current
@@ -150,6 +123,52 @@ export default function ImageGenerator() {
     link.download = `vercel-image-${format}.png`
     link.href = canvas.toDataURL('image/png')
     link.click()
+  }
+
+  const getPosition = (position: Position, width: number, height: number, elementWidth: number, elementHeight: number): [number, number] => {
+    const padding = Math.floor(width / 20)
+    let x, y
+
+    switch (position) {
+      case 'top-left':
+        x = padding
+        y = padding
+        break
+      case 'top-center':
+        x = width / 2
+        y = padding
+        break
+      case 'top-right':
+        x = width - padding
+        y = padding
+        break
+      case 'middle-left':
+        x = padding
+        y = height / 2
+        break
+      case 'middle-center':
+        x = width / 2
+        y = height / 2
+        break
+      case 'middle-right':
+        x = width - padding
+        y = height / 2
+        break
+      case 'bottom-left':
+        x = padding
+        y = height - padding
+        break
+      case 'bottom-center':
+        x = width / 2
+        y = height - padding
+        break
+      case 'bottom-right':
+        x = width - padding
+        y = height - padding
+        break
+    }
+
+    return [x, y]
   }
 
   return (
@@ -176,79 +195,68 @@ export default function ImageGenerator() {
       <div className="grid grid-cols-2 gap-4 w-full max-w-md">
         <div>
           <Label className="mb-2 block">Text Position</Label>
-          <RadioGroup value={textPosition} onValueChange={(value: TextPosition) => setTextPosition(value)}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="top" id="top" />
-              <Label htmlFor="top">Top</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="middle" id="middle" />
-              <Label htmlFor="middle">Middle</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="bottom" id="bottom" />
-              <Label htmlFor="bottom">Bottom</Label>
-            </div>
-          </RadioGroup>
-        </div>
-        <div>
-          <Label className="mb-2 block">Text Alignment</Label>
-          <RadioGroup value={textAlignment} onValueChange={(value: TextAlignment) => setTextAlignment(value)}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="left" id="left" />
-              <Label htmlFor="left">Left</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="center" id="center" />
-              <Label htmlFor="center">Center</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="right" id="right" />
-              <Label htmlFor="right">Right</Label>
-            </div>
-          </RadioGroup>
+          <Select value={textPosition} onValueChange={setTextPosition}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select text position" />
+            </SelectTrigger>
+            <SelectContent>
+              {['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'].map((pos) => (
+                <SelectItem key={pos} value={pos}>{pos.replace('-', ' ')}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label className="mb-2 block">Font Style</Label>
-          <RadioGroup value={fontStyle} onValueChange={(value: FontStyle) => setFontStyle(value)}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="regular" id="regular" />
-              <Label htmlFor="regular">Regular</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="bold" id="bold" />
-              <Label htmlFor="bold">Bold</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="bold italic" id="bold-italic" />
-              <Label htmlFor="bold-italic">Bold Italic</Label>
-            </div>
-          </RadioGroup>
+          <Select value={fontStyle} onValueChange={setFontStyle}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select font style" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="regular">Regular</SelectItem>
+              <SelectItem value="bold">Bold</SelectItem>
+              <SelectItem value="bold italic">Bold Italic</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label className="mb-2 block">Logo Position</Label>
-          <RadioGroup value={logoPosition} onValueChange={(value: LogoPosition) => setLogoPosition(value)}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="top-left" id="top-left" />
-              <Label htmlFor="top-left">Top Left</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="top-right" id="top-right" />
-              <Label htmlFor="top-right">Top Right</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="bottom-left" id="bottom-left" />
-              <Label htmlFor="bottom-left">Bottom Left</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="bottom-right" id="bottom-right" />
-              <Label htmlFor="bottom-right">Bottom Right</Label>
-            </div>
-          </RadioGroup>
+          <Select value={logoPosition} onValueChange={setLogoPosition}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select logo position" />
+            </SelectTrigger>
+            <SelectContent>
+              {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map((pos) => (
+                <SelectItem key={pos} value={pos}>{pos.replace('-', ' ')}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="mb-2 block">Logo Type</Label>
+          <Select value={logoType} onValueChange={setLogoType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select logo type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="logotype">Logotype</SelectItem>
+              <SelectItem value="icon">Icon</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
-      <canvas ref={canvasRef} className="border border-gray-300" />
-      <Button onClick={handleExport}>Export Image</Button>
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="dark-mode"
+          checked={isDarkMode}
+          onCheckedChange={setIsDarkMode}
+        />
+        <Label htmlFor="dark-mode">Dark Mode</Label>
+      </div>
+      <div style={{ width: '100%', maxWidth: '600px', overflow: 'auto' }}>
+        <canvas ref={canvasRef} className="border border-gray-300" style={{ width: '100%', height: 'auto' }} />
+      </div>
+      <Button onClick={handleExport} className="bg-blue-500 hover:bg-blue-800">Export Image</Button>
     </div>
   )
 }
