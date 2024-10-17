@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Slider } from "@/components/ui/slider"
 
 const IMAGE_FORMATS = {
   'og': { width: 1200, height: 630 },
@@ -28,12 +29,15 @@ export default function ImageGenerator() {
   const [logoPosition, setLogoPosition] = useState<Position>('top-left')
   const [logoType, setLogoType] = useState<LogoType>('logotype')
   const [isDarkMode, setIsDarkMode] = useState(true)
+  const [logoSize, setLogoSize] = useState(15)
+  const [textSize, setTextSize] = useState(15)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [vercelLogo, setVercelLogo] = useState<HTMLImageElement | null>(null)
 
   useEffect(() => {
     const loadImage = () => {
       const img = new Image()
+      img.crossOrigin = "anonymous"
       img.src = `${BASE_URL}vercel-${logoType}-${isDarkMode ? 'light' : 'dark'}.png`
       img.onload = () => setVercelLogo(img)
     }
@@ -58,7 +62,7 @@ export default function ImageGenerator() {
 
     // Draw Vercel logo
     if (vercelLogo) {
-      const logoHeight = Math.min(height / 4, 50)
+      const logoHeight = Math.min(height * (logoSize / 100), height / 2)
       const logoWidth = (logoHeight / vercelLogo.height) * vercelLogo.width
       const [logoX, logoY] = getPosition(logoPosition, width, height, logoWidth, logoHeight)
       ctx.drawImage(vercelLogo, logoX, logoY, logoWidth, logoHeight)
@@ -70,7 +74,7 @@ export default function ImageGenerator() {
 
     const fontWeight = fontStyle.includes('bold') ? 'bold' : 'normal'
     const fontStyleText = fontStyle.includes('italic') ? 'italic' : 'normal'
-    const fontSize = Math.floor(height / 15)
+    const fontSize = Math.floor(height * (textSize / 100))
     ctx.font = `${fontWeight} ${fontStyleText} ${fontSize}px Arial, sans-serif`
 
     const padding = Math.floor(width / 20)
@@ -91,7 +95,7 @@ export default function ImageGenerator() {
     }
     lines.push(currentLine)
 
-    const lineHeight = Math.floor(height / 15)
+    const lineHeight = fontSize * 1.2
     const totalTextHeight = lines.length * lineHeight
     let [textX, textY] = getPosition(textPosition, width, height, maxWidth, totalTextHeight)
 
@@ -107,22 +111,27 @@ export default function ImageGenerator() {
     lines.forEach((line, index) => {
       ctx.fillText(line, textX, textY + index * lineHeight - (totalTextHeight / 2) + (lineHeight / 2))
     })
-  }, [text, format, vercelLogo, textPosition, fontStyle, logoPosition, logoType, isDarkMode])
+  }, [text, format, vercelLogo, textPosition, fontStyle, logoPosition, logoType, isDarkMode, logoSize, textSize])
 
   useEffect(() => {
     if (canvasRef.current) {
       drawImage()
     }
-  }, [text, format, vercelLogo, drawImage, textPosition, fontStyle, logoPosition, logoType, isDarkMode])
+  }, [text, format, vercelLogo, drawImage, textPosition, fontStyle, logoPosition, logoType, isDarkMode, logoSize, textSize])
 
   const handleExport = () => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const link = document.createElement('a')
-    link.download = `vercel-image-${format}.png`
-    link.href = canvas.toDataURL('image/png')
-    link.click()
+    try {
+      const link = document.createElement('a')
+      link.download = `vercel-image-${format}.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    } catch (error) {
+      console.error("Failed to export image:", error)
+      alert("Failed to export image. Please try again.")
+    }
   }
 
   const getPosition = (position: Position, width: number, height: number, elementWidth: number, elementHeight: number): [number, number] => {
@@ -245,6 +254,28 @@ export default function ImageGenerator() {
           </Select>
         </div>
       </div>
+      <div className="w-full max-w-md space-y-4">
+        <div>
+          <Label className="mb-2 block">Logo Size</Label>
+          <Slider
+            min={1}
+            max={100}
+            step={1}
+            value={[logoSize]}
+            onValueChange={(value) => setLogoSize(value[0])}
+          />
+        </div>
+        <div>
+          <Label className="mb-2 block">Text Size</Label>
+          <Slider
+            min={1}
+            max={30}
+            step={1}
+            value={[textSize]}
+            onValueChange={(value) => setTextSize(value[0])}
+          />
+        </div>
+      </div>
       <div className="flex items-center space-x-2">
         <Switch
           id="dark-mode"
@@ -256,7 +287,7 @@ export default function ImageGenerator() {
       <div style={{ width: '100%', maxWidth: '600px', overflow: 'auto' }}>
         <canvas ref={canvasRef} className="border border-gray-300" style={{ width: '100%', height: 'auto' }} />
       </div>
-      <Button onClick={handleExport} className="bg-blue-500 hover:bg-blue-800">Export Image</Button>
+      <Button onClick={handleExport} className="bg-blue-500 hover:bg-blue-800 text-white">Export Image</Button>
     </div>
   )
 }
