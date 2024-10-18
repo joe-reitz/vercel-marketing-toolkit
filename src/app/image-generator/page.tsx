@@ -70,7 +70,7 @@ export default function ImageGenerator() {
 
     // Draw text
     ctx.fillStyle = isDarkMode ? '#ffffff' : '#000000'
-    ctx.textBaseline = 'middle'
+    ctx.textBaseline = 'top'
 
     const fontWeight = fontStyle.includes('bold') ? 'bold' : 'normal'
     const fontStyleText = fontStyle.includes('italic') ? 'italic' : 'normal'
@@ -97,17 +97,51 @@ export default function ImageGenerator() {
 
     const lineHeight = fontSize * 1.2
     const totalTextHeight = lines.length * lineHeight
-    const [textX, textY] = getPosition(textPosition, width, height, maxWidth, totalTextHeight)
 
-    // Adjust textX for left/right alignment
-    const adjustedTextX = textPosition.includes('left') ? padding : 
-                          textPosition.includes('right') ? width - padding : 
-                          textX
+    let textX: number
+    let textY: number
 
-    ctx.textAlign = textPosition.includes('center') ? 'center' : textPosition.includes('right') ? 'right' : 'left'
+    switch (textPosition) {
+      case 'top-left':
+      case 'middle-left':
+      case 'bottom-left':
+        textX = padding
+        ctx.textAlign = 'left'
+        break
+      case 'top-center':
+      case 'middle-center':
+      case 'bottom-center':
+        textX = width / 2
+        ctx.textAlign = 'center'
+        break
+      case 'top-right':
+      case 'middle-right':
+      case 'bottom-right':
+        textX = width - padding
+        ctx.textAlign = 'right'
+        break
+    }
+
+    switch (textPosition) {
+      case 'top-left':
+      case 'top-center':
+      case 'top-right':
+        textY = padding
+        break
+      case 'middle-left':
+      case 'middle-center':
+      case 'middle-right':
+        textY = (height - totalTextHeight) / 2
+        break
+      case 'bottom-left':
+      case 'bottom-center':
+      case 'bottom-right':
+        textY = height - totalTextHeight - padding
+        break
+    }
 
     lines.forEach((line, index) => {
-      ctx.fillText(line, adjustedTextX, textY + index * lineHeight - (totalTextHeight / 2) + (lineHeight / 2))
+      ctx.fillText(line, textX, textY + index * lineHeight)
     })
   }, [text, format, vercelLogo, textPosition, fontStyle, logoPosition, isDarkMode, logoSize, textSize])
 
