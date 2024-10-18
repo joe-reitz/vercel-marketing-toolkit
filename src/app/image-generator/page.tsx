@@ -134,7 +134,7 @@ export default function ImageGenerator() {
 
   const getPosition = (position: Position, width: number, height: number, elementWidth: number, elementHeight: number): [number, number] => {
     const padding = Math.floor(width / 20)
-    let x, y
+    let x: number, y: number
 
     switch (position) {
       case 'top-left':
@@ -142,36 +142,36 @@ export default function ImageGenerator() {
         y = padding
         break
       case 'top-center':
-        x = width / 2
+        x = (width - elementWidth) / 2
         y = padding
         break
       case 'top-right':
-        x = width - padding
+        x = width - elementWidth - padding
         y = padding
         break
       case 'middle-left':
         x = padding
-        y = height / 2
+        y = (height - elementHeight) / 2
         break
       case 'middle-center':
-        x = width / 2
-        y = height / 2
+        x = (width - elementWidth) / 2
+        y = (height - elementHeight) / 2
         break
       case 'middle-right':
-        x = width - padding
-        y = height / 2
+        x = width - elementWidth - padding
+        y = (height - elementHeight) / 2
         break
       case 'bottom-left':
         x = padding
-        y = height - padding
+        y = height - elementHeight - padding
         break
       case 'bottom-center':
-        x = width / 2
-        y = height - padding
+        x = (width - elementWidth) / 2
+        y = height - elementHeight - padding
         break
       case 'bottom-right':
-        x = width - padding
-        y = height - padding
+        x = width - elementWidth - padding
+        y = height - elementHeight - padding
         break
     }
 
