@@ -26,13 +26,14 @@
     "geist": "^1.2.2",
     "lucide-react": "^0.363.0",
     "next": "14.2.15",
+    "qrcode.react": "^4.0.1",
     "react": "^18",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18",
     "react-email-editor": "^1.7.11",
     "react-hot-toast": "^2.4.1",
     "shadcn-ui": "^0.2.3",
-    "tailwind-merge": "^2.5.3",
+    "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
