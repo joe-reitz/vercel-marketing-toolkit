@@ -12,18 +12,6 @@ export default function QRCodeGenerator() {
   const [size, setSize] = useState(256)
   const [iconSize, setIconSize] = useState(64)
 
-  const VercelIcon = ({ size }: { size: number }) => (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 512 512"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M256 48L496 464H16L256 48Z" fill="black" />
-    </svg>
-  )
-
   return (
     <Card className="w-full max-w-md mx-auto border-none shadow-none">
       <CardHeader>
