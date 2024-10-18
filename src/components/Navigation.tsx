@@ -15,6 +15,7 @@ export default function Navigation() {
           <li><Link href="/utm-generator" className="hover:text-vercel-gray transition-colors">UTM Generator</Link></li>
           <li><Link href="/email-builder" className="hover:text-vercel-gray transition-colors">Email Builder</Link></li>
           <li><Link href="/image-generator" className="hover:text-vercel-gray transition-colors">Image Generator</Link></li>
+          <li><Link href="/qr-code-generator" className="hover:text-vercel-gray transition-colors">QR Code Generator</Link></li>
         </ul>
       </div>
     </nav>

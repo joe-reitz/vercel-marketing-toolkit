@@ -16,6 +16,7 @@ export default function Home() {
             { href: '/utm-generator', icon: LinkIcon, title: 'UTM Parameter Generator' },
             { href: '/email-builder', icon: Mail, title: 'Email Builder' },
             { href: '/image-generator', icon: Image, title: 'Image Generator' },
+            { href: '/qr-code-generator', icon: Image, title: 'QR Code Generator' },
           ].map(({ href, icon: Icon, title }) => (
             <Link
               key={href}
