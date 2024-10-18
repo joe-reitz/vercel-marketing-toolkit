@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,37 +11,9 @@ export default function QRCodeGenerator() {
   const [url, setUrl] = useState('https://vercel.com')
   const [size, setSize] = useState(256)
   const [iconSize, setIconSize] = useState(64)
-  const qrRef = useRef<SVGSVGElement>(null)
-
-  const downloadQRCode = () => {
-    if (qrRef.current) {
-      const canvas = document.createElement("canvas")
-      const svg = qrRef.current
-      const base64doc = btoa(unescape(encodeURIComponent(svg.outerHTML)))
-      const w = parseInt(svg.getAttribute('width') || '0')
-      const h = parseInt(svg.getAttribute('height') || '0')
-      const img_to_download = document.createElement('img')
-      img_to_download.src = 'data:image/svg+xml;base64,' + base64doc
-      console.log(w, h)
-      img_to_download.onload = function () {
-        console.log('img loaded')
-        canvas.setAttribute('width', w.toString())
-        canvas.setAttribute('height', h.toString())
-        const context = canvas.getContext('2d')
-        if (context) {
-          context.drawImage(img_to_download, 0, 0, w, h)
-          const dataURL = canvas.toDataURL('image/png')
-          const a = document.createElement('a')
-          a.download = 'qr-code.png'
-          a.href = dataURL
-          a.click()
-        }
-      }
-    }
-  }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-md mx-auto border-none shadow-none">
       <CardHeader>
         <CardTitle>Vercel QR Code Generator</CardTitle>
       </CardHeader>
@@ -80,7 +52,6 @@ export default function QRCodeGenerator() {
         </div>
         <div className="flex justify-center">
           <QRCodeSVG
-            ref={qrRef}
             value={url}
             size={size}
             level="H"
@@ -96,9 +67,33 @@ export default function QRCodeGenerator() {
             }}
           />
         </div>
-        <Button onClick={downloadQRCode}>
-          Download QR Code
-        </Button>
+        <div className="flex justify-center">
+          <Button
+            className="bg-blue-500 text-white"
+            onClick={() => {
+              const svg = document.querySelector('svg')
+              if (svg) {
+                const svgData = new XMLSerializer().serializeToString(svg)
+                const canvas = document.createElement('canvas')
+                const ctx = canvas.getContext('2d')
+                const img = new Image()
+                img.onload = () => {
+                  canvas.width = size
+                  canvas.height = size
+                  ctx?.drawImage(img, 0, 0)
+                  const pngFile = canvas.toDataURL('image/png')
+                  const downloadLink = document.createElement('a')
+                  downloadLink.download = 'vercel-qr-code.png'
+                  downloadLink.href = pngFile
+                  downloadLink.click()
+                }
+                img.src = `data:image/svg+xml;base64,${btoa(svgData)}`
+              }
+            }}
+          >
+            Download QR Code
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
