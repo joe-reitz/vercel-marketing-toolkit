@@ -69,7 +69,7 @@ export default function QRCodeGenerator() {
         </div>
         <div className="flex justify-center">
           <Button
-            className="bg-blue-500 text-white"
+            className="bg-blue-500 hover:bg-blue-800 text-white"
             onClick={() => {
               const svg = document.querySelector('svg')
               if (svg) {
