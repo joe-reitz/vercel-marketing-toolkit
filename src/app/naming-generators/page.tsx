@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -53,14 +53,14 @@ export default function MarketingNameGenerators() {
   const [journeyType, setJourneyType] = useState('')
   const [brand, setBrand] = useState('')
   const [journeyName, setJourneyName] = useState('')
-  const [launchDate, setLaunchDate] = useState<Date>()
+  const [launchDate, setLaunchDate] = useState<Date | undefined>(undefined)
   const [generatedJourneyName, setGeneratedJourneyName] = useState('')
 
   // SFDC Campaign Name State
   const [sfdcType, setSfdcType] = useState('')
   const [sfdcSubtype, setSfdcSubtype] = useState('')
   const [sfdcTopic, setSfdcTopic] = useState('')
-  const [sfdcDate, setSfdcDate] = useState<Date>()
+  const [sfdcDate, setSfdcDate] = useState<Date | undefined>(undefined)
   const [generatedSfdcName, setGeneratedSfdcName] = useState('')
 
   // Inflection Asset Name State
@@ -70,18 +70,6 @@ export default function MarketingNameGenerators() {
   const [generatedAssetName, setGeneratedAssetName] = useState('')
   const [isCopied, setIsCopied] = useState(false)
 
-  useEffect(() => {
-    // Clear all items from localStorage on initial mount
-    localStorage.clear()
-    
-    // Then check for stored journey name (this won't find anything now, but keeping the logic for future storage)
-    const storedJourneyName = localStorage.getItem('generatedJourneyName')
-    if (storedJourneyName) {
-      setGeneratedJourneyName(storedJourneyName)
-      setFullJourneyName(storedJourneyName)
-    }
-  }, [])
-
   const generateJourneyName = () => {
     const formattedDate = launchDate ? format(launchDate, 'yyyyMMdd') : ''
     const formattedName = journeyName.replace(/[^a-zA-Z0-9]/g, '')
@@ -89,7 +77,6 @@ export default function MarketingNameGenerators() {
     if (journeyType && brand && journeyName.length >= 4 && formattedDate) {
       const newName = `${journeyType}_${brand}_${formattedName}_${formattedDate}`.toLowerCase()
       setGeneratedJourneyName(newName)
-      localStorage.setItem('generatedJourneyName', newName)
       setFullJourneyName(newName)
     } else {
       setGeneratedJourneyName('Please fill in all fields correctly')
@@ -112,8 +99,8 @@ export default function MarketingNameGenerators() {
         break
       case 'PPC':
         newName = sfdcSubtype === 'AdForms' 
-          ? `PPC_Vendor_AdForms_${sfdcTopic}_${format(sfdcDate, 'yyyyMM')}`
-          : `PPC_Vendor_${sfdcTopic}_${format(sfdcDate, 'yyyyMM')}`
+          ? `PPC_Vendor_AdForms_${sfdcTopic}_${sfdcDate ? format(sfdcDate, 'yyyyMM') : ''}`
+          : `PPC_Vendor_${sfdcTopic}_${sfdcDate ? format(sfdcDate, 'yyyyMM') : ''}`
         break
       case 'PRODUCT':
         newName = `PRODUCT_${sfdcTopic}`
@@ -123,7 +110,7 @@ export default function MarketingNameGenerators() {
         newName = `${sfdcType}_${sfdcTopic}_${formattedDate}`
         break
       case 'SC':
-        newName = `SC_Vendor_${sfdcTopic}_${format(sfdcDate, 'yyyyMM')}`
+        newName = `SC_Vendor_${sfdcTopic}_${sfdcDate ? format(sfdcDate, 'yyyyMM') : ''}`
         break
       case 'SDR':
         newName = sfdcSubtype === 'AutoOutbound'
