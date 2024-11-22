@@ -10,7 +10,7 @@ export default function Navigation() {
           Vercel Marketing Toolkit
         </Link>
         <ul className="flex space-x-4">
-          <li><Link href="/campaign-naming" className="hover:text-vercel-gray transition-colors">Campaign Naming</Link></li>
+          <li><Link href="/naming-generators" className="hover:text-vercel-gray transition-colors">Naming Generators</Link></li>
           <li><Link href="/date-time-picker" className="hover:text-vercel-gray transition-colors">Date & Time</Link></li>
           <li><Link href="/utm-generator" className="hover:text-vercel-gray transition-colors">UTM Generator</Link></li>
           <li><Link href="/email-builder" className="hover:text-vercel-gray transition-colors">Email Builder</Link></li>

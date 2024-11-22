@@ -11,7 +11,7 @@ export default function Home() {
         <h1 className="text-4xl font-bold mb-8 text-center">Vercel Marketing Toolkit</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { href: '/campaign-naming', icon: MessageSquare, title: 'Campaign Naming Generator' },
+            { href: '/naming-generators', icon: MessageSquare, title: 'Naming Generators' },
             { href: '/date-time-picker', icon: CalendarDays, title: 'Date & Time Picker' },
             { href: '/utm-generator', icon: LinkIcon, title: 'UTM Parameter Generator' },
             { href: '/email-builder', icon: Mail, title: 'Email Builder' },

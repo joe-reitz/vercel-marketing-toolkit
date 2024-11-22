@@ -15,19 +15,14 @@ type ToasterToast = ToastProps & {
   action?: ToastActionElement
 }
 
-type ToastActionType = {
-  ADD_TOAST: "ADD_TOAST"
-  UPDATE_TOAST: "UPDATE_TOAST"
-  DISMISS_TOAST: "DISMISS_TOAST"
-  REMOVE_TOAST: "REMOVE_TOAST"
-}
-
-const actionTypes: ToastActionType = {
+const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
   DISMISS_TOAST: "DISMISS_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST",
 } as const
+
+type ActionTypes = typeof actionTypes[keyof typeof actionTypes]
 
 type Action =
   | {
@@ -185,3 +180,4 @@ function useToast() {
 }
 
 export { useToast, toast }
+
