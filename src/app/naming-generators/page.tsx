@@ -71,6 +71,10 @@ export default function MarketingNameGenerators() {
   const [isCopied, setIsCopied] = useState(false)
 
   useEffect(() => {
+    // Clear all items from localStorage on initial mount
+    localStorage.clear()
+    
+    // Then check for stored journey name (this won't find anything now, but keeping the logic for future storage)
     const storedJourneyName = localStorage.getItem('generatedJourneyName')
     if (storedJourneyName) {
       setGeneratedJourneyName(storedJourneyName)
