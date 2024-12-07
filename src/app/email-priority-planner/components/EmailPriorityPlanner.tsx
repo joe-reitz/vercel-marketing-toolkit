@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -62,11 +62,7 @@ export function EmailPriorityPlanner() {
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
 
-  useEffect(() => {
-    fetchCampaigns()
-  }, [])
-
-  const fetchCampaigns = async () => {
+  const fetchCampaigns = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -90,7 +86,11 @@ export function EmailPriorityPlanner() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [toast])
+
+  useEffect(() => {
+    fetchCampaigns()
+  }, [fetchCampaigns])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -141,8 +141,6 @@ export function EmailPriorityPlanner() {
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
       }
 
-      const result = await response.json()
-      
       toast({
         title: "Success",
         description: "Campaign saved successfully!",
