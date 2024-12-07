@@ -1,11 +1,14 @@
 import { Redis } from 'ioredis'
 import { NextResponse } from 'next/server'
 
-// Initialize Redis client with fallback to local storage in development
-let storage: {
-  get: (key: string) => Promise<string | null>,
-  set: (key: string, value: string) => Promise<void>
+// Define the storage interface
+interface Storage {
+  get(key: string): Promise<string | null>
+  set(key: string, value: string): Promise<"OK" | null>
 }
+
+// Initialize Redis client with fallback to local storage in development
+let storage: Storage
 
 if (process.env.REDIS_URL) {
   const redis = new Redis(process.env.REDIS_URL, {
@@ -30,6 +33,7 @@ if (process.env.REDIS_URL) {
     get: async (key: string) => localStore[key] || null,
     set: async (key: string, value: string) => {
       localStore[key] = value
+      return "OK"
     }
   }
   console.log('Using local storage for development')
@@ -74,7 +78,10 @@ export async function POST(request: Request) {
     
     // Save to storage
     try {
-      await storage.set('campaigns', JSON.stringify(updatedCampaigns))
+      const result = await storage.set('campaigns', JSON.stringify(updatedCampaigns))
+      if (result !== "OK") {
+        throw new Error('Failed to save campaign to database')
+      }
     } catch (error) {
       console.error('Error saving to storage:', error)
       return NextResponse.json(
