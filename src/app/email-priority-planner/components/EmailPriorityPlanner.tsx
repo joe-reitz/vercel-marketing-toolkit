@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/components/ui/use-toast"
+import { Loader2 } from 'lucide-react'
 import EmailCalendarView from './EmailCalendarView'
 
 export interface EmailCampaign {
@@ -55,6 +57,10 @@ export function EmailPriorityPlanner() {
     description: '',
     priorityScore: 0,
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     fetchCampaigns()
@@ -62,14 +68,27 @@ export function EmailPriorityPlanner() {
 
   const fetchCampaigns = async () => {
     try {
+      setIsLoading(true)
+      setError(null)
       const response = await fetch('/api/email-campaigns')
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json()
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
       }
+      
       const data = await response.json()
-      setCampaigns(data)
+      setCampaigns(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching campaigns:', error)
+      setError('Failed to fetch campaigns')
+      toast({
+        title: "Error",
+        description: "Failed to fetch campaigns. Please refresh the page.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -97,11 +116,18 @@ export function EmailPriorityPlanner() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const campaign = {
-      ...newCampaign,
-      id: Date.now().toString(),
-    }
+    
+    if (isSubmitting) return // Prevent double submission
+    
+    setIsSubmitting(true)
+    setError(null)
+
     try {
+      const campaign = {
+        ...newCampaign,
+        id: Date.now().toString(),
+      }
+
       const response = await fetch('/api/email-campaigns', {
         method: 'POST',
         headers: {
@@ -109,10 +135,20 @@ export function EmailPriorityPlanner() {
         },
         body: JSON.stringify(campaign),
       })
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json()
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
       }
-      await fetchCampaigns()
+
+      const result = await response.json()
+      
+      toast({
+        title: "Success",
+        description: "Campaign saved successfully!",
+      })
+
+      // Reset form
       setNewCampaign({
         id: '',
         name: '',
@@ -124,8 +160,19 @@ export function EmailPriorityPlanner() {
         description: '',
         priorityScore: 0,
       })
+
+      // Refresh campaigns list
+      await fetchCampaigns()
     } catch (error) {
       console.error('Error saving campaign:', error)
+      setError('Failed to save campaign')
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save campaign",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -143,7 +190,7 @@ export function EmailPriorityPlanner() {
   return (
     <div className="flex flex-col lg:flex-row gap-8">
       <div className="w-full lg:w-1/2">
-        <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-background dark:bg-blackrounded-xl shadow-md border border-white dark:border-gray-700">
+        <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-background dark:bg-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold text-primary mb-6">New Email Campaign</h2>
 
           <div className="space-y-2">
@@ -243,13 +290,34 @@ export function EmailPriorityPlanner() {
             />
           </div>
 
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-800 dark:hover:bg-blue-900">
-            Save Campaign
+          <Button 
+            type="submit" 
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-800 dark:hover:bg-blue-900"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Campaign'
+            )}
           </Button>
+
+          {error && (
+            <p className="text-sm text-red-500 mt-2">{error}</p>
+          )}
         </form>
       </div>
       <div className="w-full lg:w-1/2">
-        <EmailCalendarView campaigns={campaigns} />
+        {isLoading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          </div>
+        ) : (
+          <EmailCalendarView campaigns={campaigns} />
+        )}
       </div>
     </div>
   )
