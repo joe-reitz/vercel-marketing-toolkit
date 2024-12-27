@@ -14,6 +14,7 @@ export default function Home() {
             { href: '/naming-generators', icon: MessageSquare, title: 'Naming Generators' },
             { href: '/date-time-picker', icon: CalendarDays, title: 'Date & Time Picker' },
             { href: '/utm-generator', icon: LinkIcon, title: 'UTM Parameter Generator' },
+            { href: '/email-priority-planner', icon: Mail, title: 'Email Prioritization' },
             { href: '/email-builder', icon: Mail, title: 'Email Builder' },
             { href: '/image-generator', icon: Image, title: 'Image Generator' },
             { href: '/qr-code-generator', icon: Image, title: 'QR Code Generator' },

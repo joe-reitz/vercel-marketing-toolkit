@@ -117,7 +117,7 @@ export function EmailPriorityPlanner() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (isSubmitting) return // Prevent double submission
+    if (isSubmitting) return
     
     setIsSubmitting(true)
     setError(null)
@@ -146,7 +146,6 @@ export function EmailPriorityPlanner() {
         description: "Campaign saved successfully!",
       })
 
-      // Reset form
       setNewCampaign({
         id: '',
         name: '',
@@ -159,14 +158,13 @@ export function EmailPriorityPlanner() {
         priorityScore: 0,
       })
 
-      // Refresh campaigns list
       await fetchCampaigns()
     } catch (error) {
       console.error('Error saving campaign:', error)
       setError('Failed to save campaign')
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save campaign",
+        description: "Failed to save campaign. Please try again.",
         variant: "destructive",
       })
     } finally {
