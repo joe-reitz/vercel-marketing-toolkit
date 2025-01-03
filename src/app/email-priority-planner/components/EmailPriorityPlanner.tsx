@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2, Pencil, Trash2 } from 'lucide-react'
 import EmailCalendarView from './EmailCalendarView'
-import { AlertCircle, CheckCircle } from 'lucide-react'
 import type { EmailCampaign } from '@/app/types'
 
 const campaignTypes = [
