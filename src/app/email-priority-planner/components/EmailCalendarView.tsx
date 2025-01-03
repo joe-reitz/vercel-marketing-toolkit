@@ -1,7 +1,7 @@
-import React from 'react'
+import * as React from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import type { EmailCampaign } from './EmailPriorityPlanner'
+import type { EmailCampaign } from '@/app/types'
 
 interface EmailCalendarViewProps {
   campaigns: EmailCampaign[]
@@ -52,23 +52,25 @@ export default function EmailCalendarView({ campaigns }: EmailCalendarViewProps)
           </TableHeader>
           <TableBody>
             {sortedCampaigns.map((campaign) => (
-              <TooltipProvider key={campaign.id}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <TableRow className={getRowColor(campaign.type)}>
-                      <TableCell className="font-medium dark:text-gray-300">{campaign.name}</TableCell>
-                      <TableCell className="dark:text-gray-400">{`${campaign.sendDate} ${campaign.sendTime}`}</TableCell>
-                      <TableCell className="dark:text-gray-400">{campaign.description}</TableCell>
-                    </TableRow>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="p-4 max-w-xs bg-white dark:bg-gray-950 border dark:border-gray-800">
-                    <p><strong>Type:</strong> {campaign.type}</p>
-                    <p><strong>Timezone:</strong> {campaign.timezone}</p>
-                    <p><strong>Priority Score:</strong> {campaign.priorityScore}</p>
-                    <p><strong>Transactional:</strong> {campaign.isTransactional ? 'Yes' : 'No'}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <TableRow key={campaign.id} className={getRowColor(campaign.type)}>
+                <TableCell className="font-medium dark:text-gray-300">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>{campaign.name}</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="p-4 max-w-xs bg-white dark:bg-gray-950 border dark:border-gray-800">
+                        <p><strong>Type:</strong> {campaign.type}</p>
+                        <p><strong>Timezone:</strong> {campaign.timezone}</p>
+                        <p><strong>Priority Score:</strong> {campaign.priorityScore}</p>
+                        <p><strong>Transactional:</strong> {campaign.isTransactional ? 'Yes' : 'No'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableCell>
+                <TableCell className="dark:text-gray-400">{`${campaign.sendDate} ${campaign.sendTime}`}</TableCell>
+                <TableCell className="dark:text-gray-400">{campaign.description}</TableCell>
+              </TableRow>
             ))}
           </TableBody>
         </Table>
