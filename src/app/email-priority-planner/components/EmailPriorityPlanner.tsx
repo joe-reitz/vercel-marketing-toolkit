@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2 } from 'lucide-react'
+import { Loader2, Pencil, Trash2 } from 'lucide-react'
 import EmailCalendarView from './EmailCalendarView'
 
 export interface EmailCampaign {
@@ -60,6 +60,7 @@ export function EmailPriorityPlanner() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [editingCampaign, setEditingCampaign] = useState<EmailCampaign | null>(null)
   const { toast } = useToast()
 
   const fetchCampaigns = useCallback(async () => {
@@ -78,16 +79,40 @@ export function EmailPriorityPlanner() {
       setCampaigns(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching campaigns:', error)
-      setError('Failed to fetch campaigns')
+      setError(error instanceof Error ? error.message : 'Unknown error')
       toast({
         title: "Error",
-        description: "Failed to fetch campaigns. Please refresh the page.",
+        description: `Failed to fetch campaigns: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       })
     } finally {
       setIsLoading(false)
     }
   }, [toast])
+
+  const testKVConnection = useCallback(async () => {
+    try {
+      const response = await fetch('/api/email-campaigns', { method: 'OPTIONS' })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      console.log('KV connection test result:', data)
+      toast({
+        title: "KV Connection Test",
+        description: "KV connection successful",
+      })
+    } catch (error) {
+      console.error('Error testing KV connection:', error)
+      toast({
+        title: "KV Connection Test Error",
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: "destructive",
+      })
+    }
+  }, [toast])
+
 
   useEffect(() => {
     fetchCampaigns()
@@ -126,13 +151,13 @@ export function EmailPriorityPlanner() {
     try {
       const campaign = {
         ...newCampaign,
-        id: Date.now().toString(),
+        id: editingCampaign ? editingCampaign.id : Date.now().toString(),
       }
 
       console.log('Submitting campaign:', campaign)
 
       const response = await fetch('/api/email-campaigns', {
-        method: 'POST',
+        method: editingCampaign ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -149,7 +174,7 @@ export function EmailPriorityPlanner() {
 
       toast({
         title: "Success",
-        description: "Campaign saved successfully!",
+        description: `Campaign ${editingCampaign ? 'updated' : 'saved'} successfully!`,
       })
 
       setNewCampaign({
@@ -163,6 +188,7 @@ export function EmailPriorityPlanner() {
         description: '',
         priorityScore: 0,
       })
+      setEditingCampaign(null)
 
       await fetchCampaigns()
     } catch (error) {
@@ -175,6 +201,42 @@ export function EmailPriorityPlanner() {
       })
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleEdit = (campaign: EmailCampaign) => {
+    setEditingCampaign(campaign)
+    setNewCampaign(campaign)
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch('/api/email-campaigns', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+      }
+
+      toast({
+        title: "Success",
+        description: "Campaign deleted successfully!",
+      })
+
+      await fetchCampaigns()
+    } catch (error) {
+      console.error('Error deleting campaign:', error)
+      toast({
+        title: "Error",
+        description: "Failed to delete campaign. Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
@@ -193,7 +255,9 @@ export function EmailPriorityPlanner() {
     <div className="flex flex-col lg:flex-row gap-8">
       <div className="w-full lg:w-1/2">
         <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-background dark:bg-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-primary mb-6">New Email Campaign</h2>
+          <h2 className="text-2xl font-bold text-primary mb-6">
+            {editingCampaign ? 'Edit Email Campaign' : 'New Email Campaign'}
+          </h2>
 
           <div className="space-y-2">
             <Label htmlFor="name">Campaign Name</Label>
@@ -236,12 +300,13 @@ export function EmailPriorityPlanner() {
 
           <div className="space-y-2">
             <Label htmlFor="timezone">Timezone</Label>
-            <Select name="timezone" onValueChange={(value) => handleSelectChange('timezone', value)}>
+            <Select name="timezone" onValueChange={(value) => handleSelectChange('timezone', value)} value={newCampaign.timezone}>
               <SelectTrigger>
                 <SelectValue placeholder="Select timezone" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="namer-group" disabled>NAMER Timezones</SelectItem>
+                <SelectItem value="namer-group" disabled>NAMER
+ Timezones</SelectItem>
                 {namerTimezones.map((tz) => (
                   <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
                 ))}
@@ -255,7 +320,7 @@ export function EmailPriorityPlanner() {
 
           <div className="space-y-2">
             <Label htmlFor="type">Campaign Type</Label>
-            <Select name="type" onValueChange={(value) => handleSelectChange('type', value)}>
+            <Select name="type" onValueChange={(value) => handleSelectChange('type', value)} value={newCampaign.type}>
               <SelectTrigger>
                 <SelectValue placeholder="Select campaign type" />
               </SelectTrigger>
@@ -269,7 +334,7 @@ export function EmailPriorityPlanner() {
 
           <div className="space-y-2">
             <Label>Is this a transactional email?</Label>
-            <RadioGroup onValueChange={handleRadioChange}>
+            <RadioGroup onValueChange={handleRadioChange} value={newCampaign.isTransactional.toString()}>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="false" id="non-transactional" />
                 <Label htmlFor="non-transactional">No</Label>
@@ -300,10 +365,10 @@ export function EmailPriorityPlanner() {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
+                {editingCampaign ? 'Updating...' : 'Saving...'}
               </>
             ) : (
-              'Save Campaign'
+              editingCampaign ? 'Update Campaign' : 'Save Campaign'
             )}
           </Button>
 
@@ -318,8 +383,44 @@ export function EmailPriorityPlanner() {
             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
           </div>
         ) : (
-          <EmailCalendarView campaigns={campaigns} />
+          <>
+            <EmailCalendarView campaigns={campaigns} />
+            <div className="mt-8">
+              <h3 className="text-xl font-bold mb-4">All Campaigns</h3>
+              <ul className="space-y-4">
+                {campaigns.map((campaign) => (
+                  <li key={campaign.id} className="flex items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                    <span>{campaign.name}</span>
+                    <div>
+                      <Button
+                        onClick={() => handleEdit(campaign)}
+                        variant="ghost"
+                        size="sm"
+                        className="mr-2"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(campaign.id)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
         )}
+        <Button 
+          onClick={testKVConnection}
+          className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+        >
+          Test KV Connection
+        </Button>
       </div>
     </div>
   )
