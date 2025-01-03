@@ -10,18 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2, Pencil, Trash2 } from 'lucide-react'
 import EmailCalendarView from './EmailCalendarView'
-
-export interface EmailCampaign {
-  id: string
-  name: string
-  sendDate: string
-  sendTime: string
-  timezone: string
-  type: string
-  isTransactional: boolean
-  description: string
-  priorityScore: number
-}
+import type { EmailCampaign } from '@/app/types'
 
 const campaignTypes = [
   { value: 'event', label: 'Event', priorityScore: 4 },
@@ -67,16 +56,34 @@ export function EmailPriorityPlanner() {
     try {
       setIsLoading(true)
       setError(null)
+      console.log('Fetching campaigns...')
       const response = await fetch('/api/email-campaigns')
       
+      console.log('Response status:', response.status)
+      console.log('Response headers:', response.headers)
+      
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
       
-      const data = await response.json()
-      console.log('Fetched campaigns:', data)
-      setCampaigns(Array.isArray(data) ? data : [])
+      const text = await response.text()
+      console.log('Raw response:', text)
+      
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (e) {
+        console.error('Error parsing JSON:', e)
+        throw new Error('Invalid JSON response')
+      }
+      
+      console.log('Parsed data:', data)
+      
+      if (!Array.isArray(data)) {
+        throw new Error('Expected an array of campaigns')
+      }
+      
+      setCampaigns(data)
     } catch (error) {
       console.error('Error fetching campaigns:', error)
       setError(error instanceof Error ? error.message : 'Unknown error')
@@ -92,23 +99,45 @@ export function EmailPriorityPlanner() {
 
   const testKVConnection = useCallback(async () => {
     try {
+      console.log('Testing KV connection...')
       const response = await fetch('/api/email-campaigns', { method: 'OPTIONS' })
+      
+      console.log('KV test response status:', response.status)
+      console.log('KV test response headers:', response.headers)
+      
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+        const errorText = await response.text()
+        console.error('KV test error response:', errorText)
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
-      const data = await response.json()
-      console.log('KV connection test result:', data)
+      
+      const text = await response.text()
+      console.log('KV test raw response:', text)
+      
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (e) {
+        console.error('Error parsing KV test JSON:', e)
+        throw new Error('Invalid JSON response from KV test')
+      }
+      
+      console.log('KV test parsed data:', data)
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Unknown error in KV test')
+      }
+      
       toast({
         title: "KV Connection Test",
-        description: "KV connection successful",
+        description: "KV connection successful"
       })
     } catch (error) {
       console.error('Error testing KV connection:', error)
       toast({
         title: "KV Connection Test Error",
         description: error instanceof Error ? error.message : 'Unknown error',
-        variant: "destructive",
+        variant: "destructive"
       })
     }
   }, [toast])
@@ -252,14 +281,14 @@ export function EmailPriorityPlanner() {
   const { min, max } = getMinMaxDates()
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8">
-      <div className="w-full lg:w-1/2">
-        <form onSubmit={handleSubmit} className="space-y-6 p-8 bg-background dark:bg-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-primary mb-6">
+    <div className='flex flex-col lg:flex-row gap-8'>
+      <div className='w-full lg:w-1/2'>
+        <form onSubmit={handleSubmit} className='space-y-6 p-8 bg-background dark:bg-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-700'>
+          <h2 className='text-2xl font-bold text-primary mb-6'>
             {editingCampaign ? 'Edit Email Campaign' : 'New Email Campaign'}
           </h2>
 
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label htmlFor="name">Campaign Name</Label>
             <Input
               id="name"
@@ -270,7 +299,7 @@ export function EmailPriorityPlanner() {
             />
           </div>
 
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label htmlFor="sendDate">Preferred Send Date</Label>
             <Input
               id="sendDate"
@@ -281,11 +310,11 @@ export function EmailPriorityPlanner() {
               value={newCampaign.sendDate}
               onChange={handleInputChange}
               required
-              className="dark:text-gray-300 dark:[color-scheme:dark]"
+              className='dark:text-gray-300 dark:[color-scheme:dark]'
             />
           </div>
 
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label htmlFor="sendTime">Preferred Send Time</Label>
             <Input
               id="sendTime"
@@ -294,11 +323,11 @@ export function EmailPriorityPlanner() {
               value={newCampaign.sendTime}
               onChange={handleInputChange}
               required
-              className="dark:text-gray-300 dark:[color-scheme:dark]"
+              className='dark:text-gray-300 dark:[color-scheme:dark]'
             />
           </div>
 
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label htmlFor="timezone">Timezone</Label>
             <Select name="timezone" onValueChange={(value) => handleSelectChange('timezone', value)} value={newCampaign.timezone}>
               <SelectTrigger>
@@ -318,7 +347,7 @@ export function EmailPriorityPlanner() {
             </Select>
           </div>
 
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label htmlFor="type">Campaign Type</Label>
             <Select name="type" onValueChange={(value) => handleSelectChange('type', value)} value={newCampaign.type}>
               <SelectTrigger>
@@ -332,21 +361,21 @@ export function EmailPriorityPlanner() {
             </Select>
           </div>
 
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label>Is this a transactional email?</Label>
             <RadioGroup onValueChange={handleRadioChange} value={newCampaign.isTransactional.toString()}>
-              <div className="flex items-center space-x-2">
+              <div className='flex items-center space-x-2'>
                 <RadioGroupItem value="false" id="non-transactional" />
                 <Label htmlFor="non-transactional">No</Label>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className='flex items-center space-x-2'>
                 <RadioGroupItem value="true" id="transactional" />
                 <Label htmlFor="transactional">Yes</Label>
               </div>
             </RadioGroup>
           </div>
 
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <Label htmlFor="description">Audience Description</Label>
             <Textarea
               id="description"
@@ -359,12 +388,12 @@ export function EmailPriorityPlanner() {
 
           <Button 
             type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-800 dark:hover:bg-blue-900"
+            className='w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-800 dark:hover:bg-blue-900'
             disabled={isSubmitting}
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 {editingCampaign ? 'Updating...' : 'Saving...'}
               </>
             ) : (
@@ -373,54 +402,54 @@ export function EmailPriorityPlanner() {
           </Button>
 
           {error && (
-            <p className="text-sm text-red-500 mt-2">{error}</p>
+            <p className='text-sm text-red-500 mt-2'>{error}</p>
           )}
         </form>
       </div>
-      <div className="w-full lg:w-1/2">
+      <div className='w-full lg:w-1/2'>
         {isLoading ? (
-          <div className="flex items-center justify-center h-32">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <div className='flex items-center justify-center h-32'>
+            <Loader2 className='h-8 w-8 animate-spin text-blue-600' />
           </div>
         ) : (
           <>
             <EmailCalendarView campaigns={campaigns} />
-            <div className="mt-8">
-              <h3 className="text-xl font-bold mb-4">All Campaigns</h3>
-              <ul className="space-y-4">
+            <div className='mt-8'>
+              <h3 className='text-xl font-bold mb-4'>All Campaigns</h3>
+              <ul className='space-y-4'>
                 {campaigns.map((campaign) => (
-                  <li key={campaign.id} className="flex items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                  <li key={campaign.id} className='flex items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-lg shadow'>
                     <span>{campaign.name}</span>
                     <div>
                       <Button
                         onClick={() => handleEdit(campaign)}
                         variant="ghost"
                         size="sm"
-                        className="mr-2"
+                        className='mr-2'
                       >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className='h-4 w-4' />
                       </Button>
                       <Button
                         onClick={() => handleDelete(campaign.id)}
                         variant="ghost"
                         size="sm"
-                        className="text-red-500 hover:text-red-700"
+                        className='text-red-500 hover:text-red-700'
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className='h-4 w-4' />
                       </Button>
                     </div>
                   </li>
                 ))}
               </ul>
             </div>
+            <Button 
+              onClick={testKVConnection}
+              className='mt-4 bg-green-600 hover:bg-green-700 text-white'
+            >
+              Test KV Connection
+            </Button>
           </>
         )}
-        <Button 
-          onClick={testKVConnection}
-          className="mt-4 bg-green-600 hover:bg-green-700 text-white"
-        >
-          Test KV Connection
-        </Button>
       </div>
     </div>
   )
