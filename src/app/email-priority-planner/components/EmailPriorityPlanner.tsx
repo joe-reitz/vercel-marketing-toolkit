@@ -74,6 +74,7 @@ export function EmailPriorityPlanner() {
       }
       
       const data = await response.json()
+      console.log('Fetched campaigns:', data)
       setCampaigns(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching campaigns:', error)
@@ -128,6 +129,8 @@ export function EmailPriorityPlanner() {
         id: Date.now().toString(),
       }
 
+      console.log('Submitting campaign:', campaign)
+
       const response = await fetch('/api/email-campaigns', {
         method: 'POST',
         headers: {
@@ -140,6 +143,9 @@ export function EmailPriorityPlanner() {
         const errorData = await response.json()
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
       }
+
+      const savedCampaign = await response.json()
+      console.log('Saved campaign:', savedCampaign)
 
       toast({
         title: "Success",
@@ -276,7 +282,7 @@ export function EmailPriorityPlanner() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Campaign Description</Label>
+            <Label htmlFor="description">Audience Description</Label>
             <Textarea
               id="description"
               name="description"

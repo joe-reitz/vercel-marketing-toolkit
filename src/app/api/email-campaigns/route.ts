@@ -1,105 +1,54 @@
-import { Redis } from 'ioredis'
+import { kv } from '@vercel/kv'
 import { NextResponse } from 'next/server'
+import type { EmailCampaign } from '@/app/types'
 
-// Define the storage interface
-interface Storage {
-  get(key: string): Promise<string | null>
-  set(key: string, value: string): Promise<"OK" | null>
-}
-
-// Initialize Redis client with fallback to local storage in development
-let storage: Storage
-
-if (process.env.REDIS_URL) {
-  const redis = new Redis(process.env.REDIS_URL, {
-    retryStrategy: (times) => {
-      const delay = Math.min(times * 50, 2000);
-      return delay;
-    },
-    maxRetriesPerRequest: 3,
-    enableReadyCheck: false
-  })
-
-  // Add connection error handling
-  redis.on('error', (error) => {
-    console.error('Redis connection error:', error)
-  })
-
-  storage = redis
-} else {
-  // Local storage implementation for development
-  const localStore: Record<string, string> = {}
-  storage = {
-    get: async (key: string) => localStore[key] || null,
-    set: async (key: string, value: string) => {
-      localStore[key] = value
-      return "OK"
-    }
-  }
-  console.log('Using local storage for development')
-}
+const CAMPAIGNS_KEY = 'email-campaigns'
 
 export async function GET() {
   try {
-    const campaigns = await storage.get('campaigns')
-    return NextResponse.json(campaigns ? JSON.parse(campaigns) : [])
+    // Add connection validation
+    if (!process.env.KV_URL || !process.env.KV_REST_API_TOKEN) {
+      console.error('Missing KV environment variables')
+      return NextResponse.json({ error: 'Database configuration error' }, { status: 500 })
+    }
+
+    console.log('Attempting to fetch campaigns...')
+    const campaigns = await kv.get<EmailCampaign[]>(CAMPAIGNS_KEY)
+    console.log('Fetched campaigns:', campaigns)
+    return NextResponse.json(campaigns || [])
   } catch (error) {
-    console.error('Error fetching campaigns:', error)
-    return NextResponse.json({ error: 'Failed to fetch campaigns' }, { status: 500 })
+    console.error('Detailed error in GET /api/email-campaigns:', error)
+    return NextResponse.json({ 
+      error: 'Failed to fetch campaigns',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
+    // Add connection validation
+    if (!process.env.KV_URL || !process.env.KV_REST_API_TOKEN) {
+      console.error('Missing KV environment variables')
+      return NextResponse.json({ error: 'Database configuration error' }, { status: 500 })
+    }
+
     const campaign = await request.json()
+    console.log('Received campaign:', campaign)
     
-    // Basic server-side validation
-    if (!campaign.name || !campaign.sendDate || !campaign.sendTime || !campaign.type) {
-      return NextResponse.json(
-        { error: 'Missing required fields' }, 
-        { status: 400 }
-      )
-    }
-
-    // Fetch existing campaigns
-    let existingCampaigns = []
-    try {
-      const campaignsStr = await storage.get('campaigns')
-      if (campaignsStr) {
-        existingCampaigns = JSON.parse(campaignsStr)
-      }
-    } catch (error) {
-      console.error('Error fetching existing campaigns:', error)
-      existingCampaigns = []
-    }
-
-    // Update campaigns
+    const existingCampaigns = await kv.get<EmailCampaign[]>(CAMPAIGNS_KEY) || []
     const updatedCampaigns = [...existingCampaigns, campaign]
     
-    // Save to storage
-    try {
-      const result = await storage.set('campaigns', JSON.stringify(updatedCampaigns))
-      if (result !== "OK") {
-        throw new Error('Failed to save campaign to database')
-      }
-    } catch (error) {
-      console.error('Error saving to storage:', error)
-      return NextResponse.json(
-        { error: 'Failed to save campaign to database' }, 
-        { status: 500 }
-      )
-    }
+    await kv.set(CAMPAIGNS_KEY, updatedCampaigns)
+    console.log('Successfully saved campaign')
     
-    return NextResponse.json({
-      message: 'Campaign added successfully',
-      campaign
-    })
+    return NextResponse.json(campaign, { status: 201 })
   } catch (error) {
-    console.error('Server error:', error)
-    return NextResponse.json(
-      { error: 'Failed to process campaign' }, 
-      { status: 500 }
-    )
+    console.error('Detailed error in POST /api/email-campaigns:', error)
+    return NextResponse.json({ 
+      error: 'Failed to save campaign',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 

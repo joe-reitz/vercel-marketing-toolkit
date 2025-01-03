@@ -1,5 +1,3 @@
-'use client'
-
 import React from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -49,6 +47,7 @@ export default function EmailCalendarView({ campaigns }: EmailCalendarViewProps)
             <TableRow className="bg-gray-50 dark:bg-gray-950">
               <TableHead className="font-semibold text-gray-900 dark:text-gray-300">Campaign Name</TableHead>
               <TableHead className="font-semibold text-gray-900 dark:text-gray-300">Send Date & Time</TableHead>
+              <TableHead className="font-semibold text-gray-900 dark:text-gray-300">Audience Description</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -59,6 +58,7 @@ export default function EmailCalendarView({ campaigns }: EmailCalendarViewProps)
                     <TableRow className={getRowColor(campaign.type)}>
                       <TableCell className="font-medium dark:text-gray-300">{campaign.name}</TableCell>
                       <TableCell className="dark:text-gray-400">{`${campaign.sendDate} ${campaign.sendTime}`}</TableCell>
+                      <TableCell className="dark:text-gray-400">{campaign.description}</TableCell>
                     </TableRow>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="p-4 max-w-xs bg-white dark:bg-gray-950 border dark:border-gray-800">
@@ -66,7 +66,6 @@ export default function EmailCalendarView({ campaigns }: EmailCalendarViewProps)
                     <p><strong>Timezone:</strong> {campaign.timezone}</p>
                     <p><strong>Priority Score:</strong> {campaign.priorityScore}</p>
                     <p><strong>Transactional:</strong> {campaign.isTransactional ? 'Yes' : 'No'}</p>
-                    <p><strong>Description:</strong> {campaign.description}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
