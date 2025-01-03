@@ -103,7 +103,7 @@ export function EmailPriorityPlanner() {
       const response = await fetch('/api/email-campaigns', { method: 'OPTIONS' })
       
       console.log('KV test response status:', response.status)
-      console.log('KV test response headers:', response.headers)
+      console.log('Response headers:', response.headers)
       
       if (!response.ok) {
         const errorText = await response.text()
@@ -141,7 +141,6 @@ export function EmailPriorityPlanner() {
       })
     }
   }, [toast])
-
 
   useEffect(() => {
     fetchCampaigns()
@@ -334,8 +333,7 @@ export function EmailPriorityPlanner() {
                 <SelectValue placeholder="Select timezone" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="namer-group" disabled>NAMER
- Timezones</SelectItem>
+                <SelectItem value="namer-group" disabled>NAMER Timezones</SelectItem>
                 {namerTimezones.map((tz) => (
                   <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
                 ))}

@@ -7,8 +7,8 @@ const CAMPAIGNS_KEY = 'email-campaigns'
 export const runtime = 'nodejs'
 
 export async function GET() {
+  console.log('GET: Attempting to fetch campaigns...')
   try {
-    console.log('GET: Attempting to fetch campaigns...')
     const campaigns = await kv.get<EmailCampaign[]>(CAMPAIGNS_KEY)
     console.log('GET: Raw fetched campaigns:', campaigns)
     
@@ -41,6 +41,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  console.log('POST: Attempting to save campaign...')
   try {
     const campaign = await request.json()
     console.log('POST: Received campaign:', campaign)
@@ -62,6 +63,7 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  console.log('PUT: Attempting to update campaign...')
   try {
     const updatedCampaign = await request.json()
     console.log('PUT: Updating campaign:', updatedCampaign)
@@ -85,6 +87,7 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  console.log('DELETE: Attempting to delete campaign...')
   try {
     const { id } = await request.json()
     console.log('DELETE: Deleting campaign with id:', id)
@@ -106,8 +109,8 @@ export async function DELETE(request: Request) {
 }
 
 export async function OPTIONS() {
+  console.log('OPTIONS: Testing KV connection...')
   try {
-    console.log('OPTIONS: Testing KV connection...')
     const testKey = 'test-connection-key'
     const testValue = 'test-connection-value'
     
@@ -143,3 +146,4 @@ export async function OPTIONS() {
     }, { status: 500 })
   }
 }
+
