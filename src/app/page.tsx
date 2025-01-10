@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarDays, Image, Link as LinkIcon, Mail, MessageSquare } from 'lucide-react'
+import { CalendarDays, Image, LinkIcon, Mail, MessageSquare, ScanSearch } from 'lucide-react'
 import { Inter } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -18,6 +18,7 @@ export default function Home() {
             { href: '/email-builder', icon: Mail, title: 'Email Builder' },
             { href: '/image-generator', icon: Image, title: 'Image Generator' },
             { href: '/qr-code-generator', icon: Image, title: 'QR Code Generator' },
+            { href: '/soql-query-helper', icon: ScanSearch, title: 'SOQL Query Helper' },
           ].map(({ href, icon: Icon, title }) => (
             <Link
               key={href}
