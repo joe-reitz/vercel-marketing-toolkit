@@ -1,11 +1,11 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Copy, Check, CalendarIcon } from 'lucide-react'
+import { Copy, Check, CalendarIcon } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -14,117 +14,130 @@ import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 
-const journeyTypeOptions = [
-  { value: 'NUR', label: 'Nurture' },
-  { value: 'EM', label: 'Email' },
-  { value: 'AR', label: 'Autoresponder' },
-  { value: 'WEBSITE', label: 'Website' },
+const regionOptions = [
+  { value: "Global", label: "Global" },
+  { value: "NAMER", label: "NAMER" },
+  { value: "EMEA", label: "EMEA" },
+  { value: "APAC", label: "APAC" },
+  { value: "LATAM", label: "LATAM" },
 ]
 
-const brandOptions = ['Vercel', 'v0']
+const journeyTypeOptions = [
+  { value: "NUR", label: "Nurture" },
+  { value: "EM", label: "Email" },
+  { value: "AR", label: "Autoresponder" },
+  { value: "WEBSITE", label: "Website" },
+]
+
+const brandOptions = ["Vercel", "v0"]
 
 const sfdcTypeOptions = [
-  { value: 'EMAIL', label: 'Email' },
-  { value: 'EVENT', label: 'Event' },
-  { value: 'INT', label: 'Integrated' },
-  { value: 'PPC', label: 'PPC' },
-  { value: 'PRODUCT', label: 'Product' },
-  { value: 'PROGRAM', label: 'Program' },
-  { value: 'PLS', label: 'Product Led Sales' },
-  { value: 'SC', label: 'Content Syndication' },
-  { value: 'SDR', label: 'SDR' },
-  { value: 'WBN', label: 'Webinar' },
-  { value: 'WEBSITE', label: 'Website' },
-  { value: 'SALES', label: 'Sales' },
+  { value: "EMAIL", label: "Email" },
+  { value: "EVENT", label: "Event" },
+  { value: "INT", label: "Integrated" },
+  { value: "PPC", label: "PPC" },
+  { value: "PRODUCT", label: "Product" },
+  { value: "PROGRAM", label: "Program" },
+  { value: "PLS", label: "Product Led Sales" },
+  { value: "SC", label: "Content Syndication" },
+  { value: "SDR", label: "SDR" },
+  { value: "WBN", label: "Webinar" },
+  { value: "WEBSITE", label: "Website" },
+  { value: "SALES", label: "Sales" },
 ]
 
-const eventSubtypes = ['COMMUNITY', 'CORPORATE', 'FIELD', 'SPONSORED']
-const ppcSubtypes = ['General', 'AdForms']
-const sdrSubtypes = ['Marketing-FUP', 'AutoOutbound']
-const webinarSubtypes = ['Vercel', '3rdParty']
+const eventSubtypes = ["COMMUNITY", "CORPORATE", "FIELD", "SPONSORED"]
+const ppcSubtypes = ["LinkedIn", "Google", "Bing", "Other"]
+const sdrSubtypes = ["Marketing-FUP", "AutoOutbound"]
+const webinarSubtypes = ["Vercel", "3rdParty"]
 
-const assetTypes = ['Email', 'List', 'Audience']
+const assetTypes = ["Email", "List", "Audience"]
 
 export default function MarketingNameGenerators() {
-  const [activeTab, setActiveTab] = useState('journey')
+  const [activeTab, setActiveTab] = useState("journey")
   const { toast } = useToast()
 
+  // State for Region Selection
+  const [region, setRegion] = useState("")
+
   // Inflection Journey Name State
-  const [journeyType, setJourneyType] = useState('')
-  const [brand, setBrand] = useState('')
-  const [journeyName, setJourneyName] = useState('')
+  const [journeyType, setJourneyType] = useState("")
+  const [brand, setBrand] = useState("")
+  const [journeyName, setJourneyName] = useState("")
   const [launchDate, setLaunchDate] = useState<Date | undefined>(undefined)
-  const [generatedJourneyName, setGeneratedJourneyName] = useState('')
+  const [generatedJourneyName, setGeneratedJourneyName] = useState("")
 
   // SFDC Campaign Name State
-  const [sfdcType, setSfdcType] = useState('')
-  const [sfdcSubtype, setSfdcSubtype] = useState('')
-  const [sfdcTopic, setSfdcTopic] = useState('')
+  const [sfdcType, setSfdcType] = useState("")
+  const [sfdcSubtype, setSfdcSubtype] = useState("")
+  const [sfdcTopic, setSfdcTopic] = useState("")
   const [sfdcDate, setSfdcDate] = useState<Date | undefined>(undefined)
-  const [generatedSfdcName, setGeneratedSfdcName] = useState('')
+  const [generatedSfdcName, setGeneratedSfdcName] = useState("")
 
   // Inflection Asset Name State
-  const [assetType, setAssetType] = useState('')
-  const [assetName, setAssetName] = useState('')
-  const [fullJourneyName, setFullJourneyName] = useState('')
-  const [generatedAssetName, setGeneratedAssetName] = useState('')
+  const [assetType, setAssetType] = useState("")
+  const [assetName, setAssetName] = useState("")
+  const [fullJourneyName, setFullJourneyName] = useState("")
+  const [generatedAssetName, setGeneratedAssetName] = useState("")
   const [isCopied, setIsCopied] = useState(false)
 
   const generateJourneyName = () => {
-    const formattedDate = launchDate ? format(launchDate, 'yyyyMMdd') : ''
-    const formattedName = journeyName.replace(/[^a-zA-Z0-9]/g, '')
-    
-    if (journeyType && brand && journeyName.length >= 4 && formattedDate) {
-      const newName = `${journeyType}_${brand}_${formattedName}_${formattedDate}`.toLowerCase()
+    const formattedDate = launchDate ? format(launchDate, "yyyyMMdd") : ""
+    const formattedName = journeyName.replace(/[^a-zA-Z0-9]/g, "")
+
+    if (region && journeyType && brand && journeyName.length >= 4 && formattedDate) {
+      const newName = `${region}_${journeyType}_${brand}_${formattedName}_${formattedDate}`.toLowerCase()
       setGeneratedJourneyName(newName)
       setFullJourneyName(newName)
     } else {
-      setGeneratedJourneyName('Please fill in all fields correctly')
+      setGeneratedJourneyName("Please fill in all fields correctly")
     }
   }
 
   const generateSfdcName = () => {
-    const formattedDate = sfdcDate ? format(sfdcDate, 'yyyyMMdd') : ''
-    let newName = ''
+    const formattedDate = sfdcDate ? format(sfdcDate, "yyyyMMdd") : ""
+    let newName = ""
 
     switch (sfdcType) {
-      case 'EMAIL':
-        newName = `EMAIL_${sfdcTopic}_${formattedDate}`
+      case "EMAIL":
+        newName = `${region}_EMAIL_${sfdcTopic}_${formattedDate}`
         break
-      case 'EVENT':
-        newName = `EVENT_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`
+      case "EVENT":
+        newName = `${region}_EVENT_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`
         break
-      case 'INT':
-        newName = `INT_${sfdcTopic}_${formattedDate}`
+      case "INT":
+        newName = `${region}_INT_${sfdcTopic}_${formattedDate}`
         break
-      case 'PPC':
-        newName = sfdcSubtype === 'AdForms' 
-          ? `PPC_Vendor_AdForms_${sfdcTopic}_${sfdcDate ? format(sfdcDate, 'yyyyMM') : ''}`
-          : `PPC_Vendor_${sfdcTopic}_${sfdcDate ? format(sfdcDate, 'yyyyMM') : ''}`
+      case "PPC":
+        newName =
+          sfdcSubtype === "AdForms"
+            ? `${region}_PPC_Vendor_$[sfdcSubtype}_${sfdcTopic}_${sfdcDate ? format(sfdcDate, "yyyyMM") : ""}`
+            : `${region}_PPC_Vendor_${sfdcTopic}_${sfdcDate ? format(sfdcDate, "yyyyMM") : ""}`
         break
-      case 'PRODUCT':
-        newName = `PRODUCT_${sfdcTopic}`
+      case "PRODUCT":
+        newName = `${region}_PRODUCT_${sfdcTopic}`
         break
-      case 'PROGRAM':
-      case 'PLS':
-        newName = `${sfdcType}_${sfdcTopic}_${formattedDate}`
+      case "PROGRAM":
+      case "PLS":
+        newName = `${region}_${sfdcType}_${sfdcTopic}_${formattedDate}`
         break
-      case 'SC':
-        newName = `SC_Vendor_${sfdcTopic}_${sfdcDate ? format(sfdcDate, 'yyyyMM') : ''}`
+      case "SC":
+        newName = `${region}_SC_Vendor_${sfdcTopic}_${sfdcDate ? format(sfdcDate, "yyyyMM") : ""}`
         break
-      case 'SDR':
-        newName = sfdcSubtype === 'AutoOutbound'
-          ? `SDR_AutoOutbound_${sfdcTopic}`
-          : `SDR_Marketing_FUP_${sfdcTopic}_${formattedDate}`
+      case "SDR":
+        newName =
+          sfdcSubtype === "AutoOutbound"
+            ? `${region}_SDR_AutoOutbound_${sfdcTopic}`
+            : `${region}_SDR_Marketing_FUP_${sfdcTopic}_${formattedDate}`
         break
-      case 'WBN':
-        newName = `WBN_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`
+      case "WBN":
+        newName = `${region}_WBN_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`
         break
-      case 'WEBSITE':
-        newName = `WEBSITE_AssetType_${sfdcTopic}_${formattedDate}`
+      case "WEBSITE":
+        newName = `${region}_WEBSITE_AssetType_${sfdcTopic}_${formattedDate}`
         break
-      case 'SALES':
-        newName = `SALES_${sfdcTopic}_${formattedDate}`
+      case "SALES":
+        newName = `${region}_SALES_${sfdcTopic}_${formattedDate}`
         break
     }
 
@@ -133,22 +146,22 @@ export default function MarketingNameGenerators() {
 
   const generateAssetName = () => {
     if (fullJourneyName && assetName) {
-      let prefix = ''
+      let prefix = ""
       switch (assetType) {
-        case 'Email':
+        case "Email":
           prefix = `EM${assetName}_`
           break
-        case 'List':
+        case "List":
           prefix = `List${assetName}_`
           break
-        case 'Audience':
+        case "Audience":
           prefix = `Audience${assetName}_`
           break
       }
       const newAssetName = `${prefix}${fullJourneyName}`.toLowerCase()
       setGeneratedAssetName(newAssetName)
     } else {
-      setGeneratedAssetName('Please enter both full journey name and asset number')
+      setGeneratedAssetName("Please enter both full journey name and asset number")
     }
   }
 
@@ -178,6 +191,22 @@ export default function MarketingNameGenerators() {
 
           <TabsContent value="journey" className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="region">Region</Label>
+              <Select onValueChange={setRegion}>
+                <SelectTrigger id="region">
+                  <SelectValue placeholder="Select region" />
+                </SelectTrigger>
+                <SelectContent>
+                  {regionOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="journeyType">Type</Label>
               <Select onValueChange={setJourneyType}>
                 <SelectTrigger id="journeyType">
@@ -192,7 +221,7 @@ export default function MarketingNameGenerators() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="brand">Brand</Label>
               <Select onValueChange={setBrand}>
@@ -208,52 +237,43 @@ export default function MarketingNameGenerators() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="journeyName">Name</Label>
-              <Input 
-                id="journeyName" 
-                value={journeyName} 
+              <Input
+                id="journeyName"
+                value={journeyName}
                 onChange={(e) => setJourneyName(e.target.value)}
                 placeholder="Enter journey name (min 4 characters)"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="launchDate">Launch Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !launchDate && "text-muted-foreground"
-                    )}
+                    className={cn("w-full justify-start text-left font-normal", !launchDate && "text-muted-foreground")}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {launchDate ? format(launchDate, "PPP") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={launchDate}
-                    onSelect={setLaunchDate}
-                    initialFocus
-                  />
+                  <Calendar mode="single" selected={launchDate} onSelect={setLaunchDate} initialFocus />
                 </PopoverContent>
               </Popover>
             </div>
-            
-            <Button 
-              onClick={generateJourneyName} 
-              className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white"
-            >
+
+            <Button onClick={generateJourneyName} className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white">
               Generate Journey Name
             </Button>
-            
+
             {generatedJourneyName && (
-              <div className={`mt-4 p-4 rounded flex items-center justify-between ${generatedJourneyName.startsWith('Please') ? 'bg-red-600' : 'bg-secondary'}`}>
+              <div
+                className={`mt-4 p-4 rounded flex items-center justify-between ${generatedJourneyName.startsWith("Please") ? "bg-red-600" : "bg-secondary"}`}
+              >
                 <div className="flex-1 mr-4">
                   <Label>Generated Journey Name:</Label>
                   <p className="text-lg font-mono break-all">{generatedJourneyName}</p>
@@ -262,17 +282,14 @@ export default function MarketingNameGenerators() {
                   variant="outline"
                   size="icon"
                   onClick={() => handleCopy(generatedJourneyName)}
-                  className={cn(
-                    "transition-colors",
-                    isCopied && "bg-green-500 text-white hover:bg-green-600"
-                  )}
+                  className={cn("transition-colors", isCopied && "bg-green-500 text-white hover:bg-green-600")}
                 >
                   {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="asset" className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="assetType">Asset Type</Label>
@@ -289,15 +306,15 @@ export default function MarketingNameGenerators() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="assetNumber">Asset Number</Label>
-              <Input 
-                id="assetNumber" 
+              <Input
+                id="assetNumber"
                 type="number"
                 min="1"
                 step="1"
-                value={assetName} 
+                value={assetName}
                 onChange={(e) => setAssetName(e.target.value)}
                 placeholder="Enter asset number (integer)"
               />
@@ -305,23 +322,22 @@ export default function MarketingNameGenerators() {
 
             <div className="space-y-2">
               <Label htmlFor="fullJourneyName">Full Journey Name</Label>
-              <Input 
-                id="fullJourneyName" 
-                value={fullJourneyName} 
+              <Input
+                id="fullJourneyName"
+                value={fullJourneyName}
                 onChange={(e) => setFullJourneyName(e.target.value)}
                 placeholder="Enter full journey name"
               />
             </div>
-            
-            <Button 
-              onClick={generateAssetName} 
-              className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white"
-            >
+
+            <Button onClick={generateAssetName} className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white">
               Generate Asset Name
             </Button>
-            
+
             {generatedAssetName && (
-              <div className={`mt-4 p-4 rounded flex items-center justify-between ${generatedAssetName.startsWith('Please') ? 'bg-red-600' : 'bg-secondary'}`}>
+              <div
+                className={`mt-4 p-4 rounded flex items-center justify-between ${generatedAssetName.startsWith("Please") ? "bg-red-600" : "bg-secondary"}`}
+              >
                 <div className="flex-1 mr-4">
                   <Label>Generated Asset Name:</Label>
                   <p className="text-lg font-mono break-all">{generatedAssetName}</p>
@@ -330,10 +346,7 @@ export default function MarketingNameGenerators() {
                   variant="outline"
                   size="icon"
                   onClick={() => handleCopy(generatedAssetName)}
-                  className={cn(
-                    "transition-colors",
-                    isCopied && "bg-green-500 text-white hover:bg-green-600"
-                  )}
+                  className={cn("transition-colors", isCopied && "bg-green-500 text-white hover:bg-green-600")}
                 >
                   {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
@@ -343,11 +356,28 @@ export default function MarketingNameGenerators() {
 
           <TabsContent value="sfdc" className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="sfdcRegion">Region</Label>
+              <Select onValueChange={setRegion}>
+                <SelectTrigger id="sfdcRegion">
+                  <SelectValue placeholder="Select region" />
+                </SelectTrigger>
+                <SelectContent>
+                  {regionOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="sfdcType">Campaign Type</Label>
-              <Select onValueChange={(value) => {
-                setSfdcType(value)
-                setSfdcSubtype('')
-              }}>
+              <Select
+                onValueChange={(value) => {
+                  setSfdcType(value)
+                  setSfdcSubtype("")
+                }}
+              >
                 <SelectTrigger id="sfdcType">
                   <SelectValue placeholder="Select campaign type" />
                 </SelectTrigger>
@@ -360,8 +390,7 @@ export default function MarketingNameGenerators() {
                 </SelectContent>
               </Select>
             </div>
-
-            {sfdcType === 'EVENT' && (
+            {sfdcType === "EVENT" && (
               <div className="space-y-2">
                 <Label htmlFor="sfdcSubtype">Event Type</Label>
                 <Select onValueChange={setSfdcSubtype}>
@@ -379,7 +408,7 @@ export default function MarketingNameGenerators() {
               </div>
             )}
 
-            {sfdcType === 'PPC' && (
+            {sfdcType === "PPC" && (
               <div className="space-y-2">
                 <Label htmlFor="sfdcSubtype">PPC Type</Label>
                 <Select onValueChange={setSfdcSubtype}>
@@ -397,7 +426,7 @@ export default function MarketingNameGenerators() {
               </div>
             )}
 
-            {sfdcType === 'SDR' && (
+            {sfdcType === "SDR" && (
               <div className="space-y-2">
                 <Label htmlFor="sfdcSubtype">SDR Type</Label>
                 <Select onValueChange={setSfdcSubtype}>
@@ -415,7 +444,7 @@ export default function MarketingNameGenerators() {
               </div>
             )}
 
-            {sfdcType === 'WBN' && (
+            {sfdcType === "WBN" && (
               <div className="space-y-2">
                 <Label htmlFor="sfdcSubtype">Webinar Type</Label>
                 <Select onValueChange={setSfdcSubtype}>
@@ -432,52 +461,43 @@ export default function MarketingNameGenerators() {
                 </Select>
               </div>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="sfdcTopic">Topic</Label>
-              <Input 
-                id="sfdcTopic" 
-                value={sfdcTopic} 
+              <Input
+                id="sfdcTopic"
+                value={sfdcTopic}
                 onChange={(e) => setSfdcTopic(e.target.value)}
                 placeholder="Enter campaign topic"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="sfdcDate">Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !sfdcDate && "text-muted-foreground"
-                    )}
+                    className={cn("w-full justify-start text-left font-normal", !sfdcDate && "text-muted-foreground")}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {sfdcDate ? format(sfdcDate, "PPP") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={sfdcDate}
-                    onSelect={setSfdcDate}
-                    initialFocus
-                  />
+                  <Calendar mode="single" selected={sfdcDate} onSelect={setSfdcDate} initialFocus />
                 </PopoverContent>
               </Popover>
             </div>
-            
-            <Button 
-              onClick={generateSfdcName} 
-              className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white"
-            >
+
+            <Button onClick={generateSfdcName} className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white">
               Generate SFDC Campaign Name
             </Button>
-            
+
             {generatedSfdcName && (
-              <div className={`mt-4 p-4 rounded flex items-center justify-between ${generatedSfdcName.startsWith('Please') ? 'bg-red-600' : 'bg-secondary'}`}>
+              <div
+                className={`mt-4 p-4 rounded flex items-center justify-between ${generatedSfdcName.startsWith("Please") ? "bg-red-600" : "bg-secondary"}`}
+              >
                 <div className="flex-1 mr-4">
                   <Label>Generated SFDC Campaign Name:</Label>
                   <p className="text-lg font-mono break-all">{generatedSfdcName}</p>
@@ -486,10 +506,7 @@ export default function MarketingNameGenerators() {
                   variant="outline"
                   size="icon"
                   onClick={() => handleCopy(generatedSfdcName)}
-                  className={cn(
-                    "transition-colors",
-                    isCopied && "bg-green-500 text-white hover:bg-green-600"
-                  )}
+                  className={cn("transition-colors", isCopied && "bg-green-500 text-white hover:bg-green-600")}
                 >
                   {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>
