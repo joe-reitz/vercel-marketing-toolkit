@@ -108,12 +108,14 @@ export default function MarketingNameGenerators() {
       case "INT":
         newName = `${region}_INT_${sfdcTopic}_${formattedDate}`
         break
-      case "PPC":
-        newName =
-          sfdcSubtype === "AdForms"
-            ? `${region}_PPC_Vendor_$[sfdcSubtype}_${sfdcTopic}_${sfdcDate ? format(sfdcDate, "yyyyMM") : ""}`
-            : `${region}_PPC_Vendor_${sfdcTopic}_${sfdcDate ? format(sfdcDate, "yyyyMM") : ""}`
-        break
+        case "PPC":
+          // Ensure sfdcSubtype is selected and included in the name
+          if (!sfdcSubtype) {
+            setGeneratedSfdcName("Please select a PPC Type");
+            return;
+          }
+          newName = `${region}_PPC_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`;
+          break
       case "PRODUCT":
         newName = `${region}_PRODUCT_${sfdcTopic}`
         break
@@ -122,26 +124,28 @@ export default function MarketingNameGenerators() {
         newName = `${region}_${sfdcType}_${sfdcTopic}_${formattedDate}`
         break
       case "SC":
-        newName = `${region}_SC_Vendor_${sfdcTopic}_${sfdcDate ? format(sfdcDate, "yyyyMM") : ""}`
+        newName = `${region}_SC_Vendor_${sfdcTopic}_${sfdcDate ? format(sfdcDate, "yyyyMMdd") : ""}`
         break
       case "SDR":
         newName =
           sfdcSubtype === "AutoOutbound"
             ? `${region}_SDR_AutoOutbound_${sfdcTopic}`
-            : `${region}_SDR_Marketing_FUP_${sfdcTopic}_${formattedDate}`
+            : `${region}_SDR_Marketing-FUP_${sfdcTopic}_${formattedDate}`
         break
       case "WBN":
         newName = `${region}_WBN_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`
         break
       case "WEBSITE":
-        newName = `${region}_WEBSITE_AssetType_${sfdcTopic}_${formattedDate}`
+        newName = `${region}_WEBSITE_${sfdcTopic}_${formattedDate}`
         break
       case "SALES":
         newName = `${region}_SALES_${sfdcTopic}_${formattedDate}`
         break
     }
 
-    setGeneratedSfdcName(newName)
+
+    
+    setGeneratedSfdcName(newName.toLowerCase());
   }
 
   const generateAssetName = () => {
