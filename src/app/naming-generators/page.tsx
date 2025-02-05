@@ -73,7 +73,8 @@ export default function MarketingNameGenerators() {
   const [sfdcTopic, setSfdcTopic] = useState("")
   const [sfdcDate, setSfdcDate] = useState<Date | undefined>(undefined)
   const [generatedSfdcName, setGeneratedSfdcName] = useState("")
-
+  const [vendorName, setVendorName] = useState("");
+  const formatTextWithHyphens = (text: string): string => text.replace(/\s+/g, "-").toLowerCase();
   // Inflection Asset Name State
   const [assetType, setAssetType] = useState("")
   const [assetName, setAssetName] = useState("")
@@ -83,8 +84,8 @@ export default function MarketingNameGenerators() {
 
   const generateJourneyName = () => {
     const formattedDate = launchDate ? format(launchDate, "yyyyMMdd") : ""
-    const formattedName = journeyName.replace(/[^a-zA-Z0-9]/g, "")
-
+    const formattedName = journeyName.trim().replace(/\s+/g, "-").toLowerCase()
+    
     if (region && journeyType && brand && journeyName.length >= 4 && formattedDate) {
       const newName = `${region}_${journeyType}_${brand}_${formattedName}_${formattedDate}`.toLowerCase()
       setGeneratedJourneyName(newName)
@@ -130,6 +131,11 @@ export default function MarketingNameGenerators() {
       setGeneratedSfdcName("Please select a SDR Type");
       return;
     }  
+    if (sfdcType === "SC" && !vendorName) {
+      setGeneratedSfdcName("Please enter a Vendor Name for Content Syndication");
+      return;
+    }
+
     // Format the date and generate the name
     const formattedDate = sfdcDate ? format(sfdcDate, "yyyyMMdd") : "";
     let newName = "";
@@ -155,7 +161,7 @@ export default function MarketingNameGenerators() {
         newName = `${region}_${sfdcType}_${sfdcTopic}_${formattedDate}`;
         break;
       case "SC":
-        newName = `${region}_SC_Replace-with-vendor-name_${sfdcTopic}_${formattedDate}`;
+        newName = `${region}_SC_${vendorName}_${sfdcTopic}_${formattedDate}`;
         break;
       case "SDR":
         newName =
@@ -359,7 +365,7 @@ export default function MarketingNameGenerators() {
               <Input
                 id="fullJourneyName"
                 value={fullJourneyName}
-                onChange={(e) => setFullJourneyName(e.target.value)}
+                onChange={(e) => setJourneyName(formatTextWithHyphens(e.target.value))}
                 placeholder="Enter full journey name"
               />
             </div>
@@ -424,6 +430,7 @@ export default function MarketingNameGenerators() {
                 </SelectContent>
               </Select>
             </div>
+            
             {sfdcType === "EVENT" && (
               <div className="space-y-2">
                 <Label htmlFor="sfdcSubtype">Event Type</Label>
@@ -457,6 +464,18 @@ export default function MarketingNameGenerators() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+
+            {sfdcType === "SC" && (
+              <div className="space-y-2">
+                <Label htmlFor="vendorName">Vendor Name</Label>
+                <Input
+                  id="vendorName"
+                  value={vendorName}
+                  onChange={(e) => setVendorName(formatTextWithHyphens(e.target.value))}
+                  placeholder="Enter vendor name"
+                />
               </div>
             )}
 
@@ -496,12 +515,14 @@ export default function MarketingNameGenerators() {
               </div>
             )}
 
+
+
             <div className="space-y-2">
               <Label htmlFor="sfdcTopic">Topic</Label>
               <Input
                 id="sfdcTopic"
                 value={sfdcTopic}
-                onChange={(e) => setSfdcTopic(e.target.value)}
+                onChange={(e) => setSfdcTopic(formatTextWithHyphens(e.target.value))}
                 placeholder="Enter campaign topic"
               />
             </div>
