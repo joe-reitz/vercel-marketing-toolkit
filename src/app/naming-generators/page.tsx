@@ -73,7 +73,8 @@ export default function MarketingNameGenerators() {
   const [sfdcTopic, setSfdcTopic] = useState("")
   const [sfdcDate, setSfdcDate] = useState<Date | undefined>(undefined)
   const [generatedSfdcName, setGeneratedSfdcName] = useState("")
-
+  const [vendorName, setVendorName] = useState("");
+  const formatTextWithHyphens = (text: string): string => text.replace(/\s+/g, "-").toLowerCase();
   // Inflection Asset Name State
   const [assetType, setAssetType] = useState("")
   const [assetName, setAssetName] = useState("")
@@ -83,8 +84,8 @@ export default function MarketingNameGenerators() {
 
   const generateJourneyName = () => {
     const formattedDate = launchDate ? format(launchDate, "yyyyMMdd") : ""
-    const formattedName = journeyName.replace(/[^a-zA-Z0-9]/g, "")
-
+    const formattedName = journeyName.trim().replace(/\s+/g, "-").toLowerCase()
+    
     if (region && journeyType && brand && journeyName.length >= 4 && formattedDate) {
       const newName = `${region}_${journeyType}_${brand}_${formattedName}_${formattedDate}`.toLowerCase()
       setGeneratedJourneyName(newName)
@@ -95,58 +96,93 @@ export default function MarketingNameGenerators() {
   }
 
   const generateSfdcName = () => {
-    const formattedDate = sfdcDate ? format(sfdcDate, "yyyyMMdd") : ""
-    let newName = ""
+    // Check if all required fields are filled
+    if (!region) {
+      setGeneratedSfdcName("Please select a Region");
+      return;
+    }
+    if (!sfdcType) {
+      setGeneratedSfdcName("Please select a Campaign Type");
+      return;
+    }
+    if (!sfdcTopic) {
+      setGeneratedSfdcName("Please enter a Topic");
+      return;
+    }
+    if (!sfdcDate) {
+      setGeneratedSfdcName("Please select a Date");
+      return;
+    }
+  
+    // Additional checks for specific campaign types
+    if (sfdcType === "EVENT" && !sfdcSubtype) {
+      setGeneratedSfdcName("Please select an Event Type");
+      return;
+    }
+    if (sfdcType === "PPC" && !sfdcSubtype) {
+      setGeneratedSfdcName("Please select a PPC Type");
+      return;
+    }
+    if (sfdcType === "WBN" && !sfdcSubtype) {
+      setGeneratedSfdcName("Please select a Webinar Type");
+      return;
+    }  
+    if (sfdcType === "SDR" && !sfdcSubtype) {
+      setGeneratedSfdcName("Please select a SDR Type");
+      return;
+    }  
+    if (sfdcType === "SC" && !vendorName) {
+      setGeneratedSfdcName("Please enter a Vendor Name for Content Syndication");
+      return;
+    }
 
+    // Format the date and generate the name
+    const formattedDate = sfdcDate ? format(sfdcDate, "yyyyMMdd") : "";
+    let newName = "";
+  
     switch (sfdcType) {
       case "EMAIL":
-        newName = `${region}_EMAIL_${sfdcTopic}_${formattedDate}`
-        break
+        newName = `${region}_EMAIL_${sfdcTopic}_${formattedDate}`;
+        break;
       case "EVENT":
-        newName = `${region}_EVENT_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`
-        break
+        newName = `${region}_EVENT_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`;
+        break;
       case "INT":
-        newName = `${region}_INT_${sfdcTopic}_${formattedDate}`
-        break
-        case "PPC":
-          // Ensure sfdcSubtype is selected and included in the name
-          if (!sfdcSubtype) {
-            setGeneratedSfdcName("Please select a PPC Type");
-            return;
-          }
-          newName = `${region}_PPC_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`;
-          break
+        newName = `${region}_INT_${sfdcTopic}_${formattedDate}`;
+        break;
+      case "PPC":
+        newName = `${region}_PPC_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`;
+        break;
       case "PRODUCT":
-        newName = `${region}_PRODUCT_${sfdcTopic}`
-        break
+        newName = `${region}_PRODUCT_${sfdcTopic}_${formattedDate}`;
+        break;
       case "PROGRAM":
       case "PLS":
-        newName = `${region}_${sfdcType}_${sfdcTopic}_${formattedDate}`
-        break
+        newName = `${region}_${sfdcType}_${sfdcTopic}_${formattedDate}`;
+        break;
       case "SC":
-        newName = `${region}_SC_Vendor_${sfdcTopic}_${sfdcDate ? format(sfdcDate, "yyyyMMdd") : ""}`
-        break
+        newName = `${region}_SC_${vendorName}_${sfdcTopic}_${formattedDate}`;
+        break;
       case "SDR":
         newName =
           sfdcSubtype === "AutoOutbound"
             ? `${region}_SDR_AutoOutbound_${sfdcTopic}`
-            : `${region}_SDR_Marketing-FUP_${sfdcTopic}_${formattedDate}`
-        break
+            : `${region}_SDR_Marketing-FUP_${sfdcTopic}_${formattedDate}`;
+        break;
       case "WBN":
-        newName = `${region}_WBN_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`
-        break
+        newName = `${region}_WBN_${sfdcSubtype}_${sfdcTopic}_${formattedDate}`;
+        break;
       case "WEBSITE":
-        newName = `${region}_WEBSITE_${sfdcTopic}_${formattedDate}`
-        break
+        newName = `${region}_WEBSITE_${sfdcTopic}_${formattedDate}`;
+        break;
       case "SALES":
-        newName = `${region}_SALES_${sfdcTopic}_${formattedDate}`
-        break
+        newName = `${region}_SALES_${sfdcTopic}_${formattedDate}`;
+        break;
     }
-
-
-    
+  
+    // Ensure the output is lowercase and set the generated name
     setGeneratedSfdcName(newName.toLowerCase());
-  }
+  };
 
   const generateAssetName = () => {
     if (fullJourneyName && assetName) {
@@ -329,7 +365,7 @@ export default function MarketingNameGenerators() {
               <Input
                 id="fullJourneyName"
                 value={fullJourneyName}
-                onChange={(e) => setFullJourneyName(e.target.value)}
+                onChange={(e) => setJourneyName(formatTextWithHyphens(e.target.value))}
                 placeholder="Enter full journey name"
               />
             </div>
@@ -394,6 +430,7 @@ export default function MarketingNameGenerators() {
                 </SelectContent>
               </Select>
             </div>
+            
             {sfdcType === "EVENT" && (
               <div className="space-y-2">
                 <Label htmlFor="sfdcSubtype">Event Type</Label>
@@ -427,6 +464,18 @@ export default function MarketingNameGenerators() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+
+            {sfdcType === "SC" && (
+              <div className="space-y-2">
+                <Label htmlFor="vendorName">Vendor Name</Label>
+                <Input
+                  id="vendorName"
+                  value={vendorName}
+                  onChange={(e) => setVendorName(formatTextWithHyphens(e.target.value))}
+                  placeholder="Enter vendor name"
+                />
               </div>
             )}
 
@@ -466,12 +515,14 @@ export default function MarketingNameGenerators() {
               </div>
             )}
 
+
+
             <div className="space-y-2">
               <Label htmlFor="sfdcTopic">Topic</Label>
               <Input
                 id="sfdcTopic"
                 value={sfdcTopic}
-                onChange={(e) => setSfdcTopic(e.target.value)}
+                onChange={(e) => setSfdcTopic(formatTextWithHyphens(e.target.value))}
                 placeholder="Enter campaign topic"
               />
             </div>
