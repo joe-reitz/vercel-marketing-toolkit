@@ -53,7 +53,7 @@ export default function UTMGenerator() {
       utm_source: utmSource,
       utm_campaign: utmCampaign
     })
-    const url = `https://www.${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${params.toString()}`
+    const url = `https://${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${params.toString()}`
     setGeneratedUrl(url)
   }
 
@@ -81,7 +81,7 @@ export default function UTMGenerator() {
           <Label htmlFor="baseUrl">Base URL</Label>
           <div className="flex">
             <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">
-              https://www.
+              https://
             </span>
             <Input
               id="baseUrl"
