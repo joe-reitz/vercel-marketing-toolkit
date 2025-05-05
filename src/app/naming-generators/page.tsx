@@ -87,8 +87,8 @@ export default function MarketingNameGenerators() {
     const formattedDate = launchDate ? format(launchDate, "yyyyMMdd") : ""
     const formattedName = journeyName.trim().replace(/\s+/g, "-").toLowerCase()
     
-    if (region && journeyType && brand && journeyName.length >= 4 && formattedDate && linearTicketId.trim) {
-      const newName = `${region}_${journeyType}_${brand}_${formattedName}_${formattedDate}_${linearTicketId}`.toLowerCase()
+    if (region && journeyType && brand && journeyName.length >= 4 && formattedDate && linearTicketId.trim()) {
+      const newName = `${region}_${journeyType}_${brand}_${formattedName}_${formattedDate}_${linearTicketId.trim()}`.toLowerCase()
       setGeneratedJourneyName(newName)
       setFullJourneyName(newName)
     } else {
