@@ -13,6 +13,7 @@ const IMAGE_FORMATS = {
   'youtube': { width: 1280, height: 720 },
   'email-small': { width: 600, height: 200 },
   'email-large': { width: 600, height: 400 },
+  'banner': { width: 2048, height: 600 },
 }
 
 type Position = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-center' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right'
@@ -41,7 +42,6 @@ export default function ImageGenerator() {
       img.src = `${BASE_URL}vercel-${logoType}-${isDarkMode ? 'light' : 'dark'}.png`
       img.onload = () => setVercelLogo(img)
     }
-
     loadImage()
   }, [logoType, isDarkMode])
 
@@ -56,19 +56,16 @@ export default function ImageGenerator() {
     canvas.width = width
     canvas.height = height
 
-    // Set background
     ctx.fillStyle = isDarkMode ? '#000000' : '#ffffff'
     ctx.fillRect(0, 0, width, height)
 
-    // Draw Vercel logo
     if (vercelLogo) {
-      const logoHeight = Math.min(height * (logoSize / 100), height / 2)
+      const logoHeight = Math.min(height * (logoSize / 100), height)
       const logoWidth = (logoHeight / vercelLogo.height) * vercelLogo.width
       const [logoX, logoY] = getPosition(logoPosition, width, height, logoWidth, logoHeight)
       ctx.drawImage(vercelLogo, logoX, logoY, logoWidth, logoHeight)
     }
 
-    // Draw text
     ctx.fillStyle = isDarkMode ? '#ffffff' : '#000000'
     ctx.textBaseline = 'top'
 
@@ -154,7 +151,6 @@ export default function ImageGenerator() {
   const handleExport = () => {
     const canvas = canvasRef.current
     if (!canvas) return
-
     try {
       const link = document.createElement('a')
       link.download = `vercel-image-${format}.png`
@@ -169,7 +165,6 @@ export default function ImageGenerator() {
   const getPosition = (position: Position, width: number, height: number, elementWidth: number, elementHeight: number): [number, number] => {
     const padding = Math.floor(width / 20)
     let x: number, y: number
-
     switch (position) {
       case 'top-left':
         x = padding
@@ -208,7 +203,6 @@ export default function ImageGenerator() {
         y = height - elementHeight - padding
         break
     }
-
     return [x, y]
   }
 
@@ -231,6 +225,7 @@ export default function ImageGenerator() {
           <SelectItem value="youtube">YouTube Poster (1280x720)</SelectItem>
           <SelectItem value="email-small">Email Banner Small (600x200)</SelectItem>
           <SelectItem value="email-large">Email Banner Large (600x400)</SelectItem>
+          <SelectItem value="banner">Banner (2048x100)</SelectItem>
         </SelectContent>
       </Select>
       <div className="grid grid-cols-2 gap-4 w-full max-w-md">
@@ -267,7 +262,7 @@ export default function ImageGenerator() {
               <SelectValue placeholder="Select logo position" />
             </SelectTrigger>
             <SelectContent>
-              {(['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const).map((pos) => (
+              {(['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'] as const).map((pos) => (
                 <SelectItem key={pos} value={pos}>{pos.replace('-', ' ')}</SelectItem>
               ))}
             </SelectContent>
