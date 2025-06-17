@@ -13,7 +13,7 @@ const IMAGE_FORMATS = {
   'youtube': { width: 1280, height: 720 },
   'email-small': { width: 600, height: 200 },
   'email-large': { width: 600, height: 400 },
-  'banner': { width: 2048, height: 600 },
+  'banner': { width: 2048, height: 200 },
 }
 
 type Position = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-center' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right'
