@@ -65,7 +65,6 @@ export default function MarketingNameGenerators() {
   const [brand, setBrand] = useState("")
   const [journeyName, setJourneyName] = useState("")
   const [launchDate, setLaunchDate] = useState<Date | undefined>(undefined)
-  const [linearTicketId, setLinearTicketId] = useState<string>("")
   const [generatedJourneyName, setGeneratedJourneyName] = useState("")
 
   // SFDC Campaign Name State
@@ -87,8 +86,8 @@ export default function MarketingNameGenerators() {
     const formattedDate = launchDate ? format(launchDate, "yyyyMMdd") : ""
     const formattedName = journeyName.trim().replace(/\s+/g, "-").toLowerCase()
     
-    if (region && journeyType && brand && journeyName.length >= 4 && formattedDate && linearTicketId.trim()) {
-      const newName = `${region}_${journeyType}_${brand}_${formattedName}_${formattedDate}_${linearTicketId.trim()}`.toLowerCase()
+    if (region && journeyType && brand && journeyName.length >= 4 && formattedDate) {
+      const newName = `${region}_${journeyType}_${brand}_${formattedName}_${formattedDate}`.toLowerCase()
       setGeneratedJourneyName(newName)
       setFullJourneyName(newName)
     } else {
@@ -305,16 +304,6 @@ export default function MarketingNameGenerators() {
                   <Calendar mode="single" selected={launchDate} onSelect={setLaunchDate} initialFocus />
                 </PopoverContent>
               </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="linearTicketId">Linear Ticket ID</Label>
-              <Input
-                id="linearTicketId"
-                value={linearTicketId}
-                onChange={(e) => setLinearTicketId(e.target.value)}
-                placeholder="Enter Linear Ticket ID"
-              />
             </div>
 
             <Button onClick={generateJourneyName} className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white">
