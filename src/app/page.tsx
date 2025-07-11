@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarDays, Image, LinkIcon, Mail, MessageSquare, ScanSearch } from 'lucide-react'
+import { CalendarDays, Image, LinkIcon, MessageSquare, ScanSearch } from 'lucide-react'
 import { Inter } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'] })
