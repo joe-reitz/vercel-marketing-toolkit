@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,37 @@ import { cn } from "@/lib/utils"
 
 type ErrorState = {
   [key: string]: string | null
+}
+
+// Helper function to format date with custom format string
+const formatDate = (date: Date, format: string, timeZone: string): string => {
+  const options: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone,
+  }
+
+  const parts = new Intl.DateTimeFormat("en-US", options).formatToParts(date)
+  const partMap = parts.reduce(
+    (acc, part) => {
+      acc[part.type] = part.value
+      return acc
+    },
+    {} as Record<string, string>,
+  )
+
+  return format
+    .replace("YYYY", partMap.year)
+    .replace("MM", partMap.month)
+    .replace("DD", partMap.day)
+    .replace("HH", partMap.hour === "24" ? "00" : partMap.hour) // Handle midnight case
+    .replace("mm", partMap.minute)
+    .replace("ss", partMap.second)
 }
 
 // Prioritized US timezones
@@ -36,6 +67,7 @@ export default function EventCreatorPage() {
   const [timezone, setTimezone] = useState("America/New_York")
   const [duration, setDuration] = useState("60")
   const [timezonePopoverOpen, setTimezonePopoverOpen] = useState(false)
+  const [customFormat, setCustomFormat] = useState("YYYY-MM-DD HH:mm:ss")
 
   const [errors, setErrors] = useState<ErrorState>({})
   const [generatedOutput, setGeneratedOutput] = useState<{
@@ -43,6 +75,7 @@ export default function EventCreatorPage() {
     agicalLink: string
     isoStart: string
     isoEnd: string
+    formattedDateTime: string
   } | null>(null)
 
   const [copied, setCopied] = useState<string | null>(null)
@@ -69,6 +102,13 @@ export default function EventCreatorPage() {
   const minutes = useMemo(() => Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0")), [])
 
   // --- CORE LOGIC ---
+  useEffect(() => {
+    if (generatedOutput) {
+      const newFormatted = formatDate(new Date(generatedOutput.isoStart), customFormat, timezone)
+      setGeneratedOutput((prev) => (prev ? { ...prev, formattedDateTime: newFormatted } : null))
+    }
+  }, [customFormat, timezone]) // Removed generatedOutput?.isoStart from dependencies
+
   const handleGenerate = () => {
     // 1. Validation
     const newErrors: ErrorState = {}
@@ -133,7 +173,7 @@ export default function EventCreatorPage() {
 
     const endUtc = new Date(startUtc.getTime() + Number.parseInt(duration) * 60 * 1000)
 
-    // 3. Format for Links
+    // 3. Format for Links & Date/Time
     const toGoogleCalendarFormat = (d: Date) => d.toISOString().replace(/[-:.]/g, "").slice(0, 15) + "Z"
     const startUtcFormatted = toGoogleCalendarFormat(startUtc)
     const endUtcFormatted = toGoogleCalendarFormat(endUtc)
@@ -143,12 +183,14 @@ export default function EventCreatorPage() {
 
     const googleLink = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodedEventName}&dates=${startUtcFormatted}/${endUtcFormatted}&details=${encodedDescription}&ctz=${timezone}`
     const agicalLink = `https://ics.agical.io/?startdt=${startUtcFormatted}&enddt=${endUtcFormatted}&subject=${encodedEventName}&description=${encodedDescription}`
+    const formattedDateTime = formatDate(startUtc, customFormat, timezone)
 
     setGeneratedOutput({
       googleLink,
       agicalLink,
       isoStart: startUtc.toISOString(),
       isoEnd: endUtc.toISOString(),
+      formattedDateTime,
     })
   }
 
@@ -372,12 +414,18 @@ export default function EventCreatorPage() {
           {generatedOutput && (
             <div className="mt-8">
               <Tabs defaultValue="links" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-800 text-slate-400">
+                <TabsList className="grid w-full grid-cols-3 bg-slate-800 text-slate-400">
                   <TabsTrigger
                     value="links"
                     className="data-[state=active]:bg-slate-700 data-[state=active]:text-white"
                   >
                     Calendar Links
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="datetime"
+                    className="data-[state=active]:bg-slate-700 data-[state=active]:text-white"
+                  >
+                    Date & Time
                   </TabsTrigger>
                   <TabsTrigger value="iso" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white">
                     ISO Datetime
@@ -422,6 +470,44 @@ export default function EventCreatorPage() {
                           className="hover:bg-slate-700"
                         >
                           {copied === "agical" ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Clipboard className="h-4 w-4 text-slate-400" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="datetime" className="mt-4 p-4 bg-slate-800/50 rounded-md border border-slate-800">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="custom-format" className="text-slate-400 text-sm">
+                        Custom Format
+                      </Label>
+                      <Input
+                        id="custom-format"
+                        value={customFormat}
+                        onChange={(e) => setCustomFormat(e.target.value)}
+                        className="bg-slate-900 border-slate-700 text-slate-300 mt-1 font-mono"
+                        placeholder="YYYY-MM-DD HH:mm:ss"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-slate-400 text-sm">Formatted Date & Time</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Input
+                          readOnly
+                          value={generatedOutput.formattedDateTime}
+                          className="bg-slate-900 border-slate-700 text-slate-400 truncate font-mono"
+                        />
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => handleCopy(generatedOutput.formattedDateTime, "datetime")}
+                          className="hover:bg-slate-700"
+                        >
+                          {copied === "datetime" ? (
                             <Check className="h-4 w-4 text-green-500" />
                           ) : (
                             <Clipboard className="h-4 w-4 text-slate-400" />
