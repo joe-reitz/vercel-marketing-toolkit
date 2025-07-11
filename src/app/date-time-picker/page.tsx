@@ -84,7 +84,8 @@ export default function EventCreatorPage() {
   const timezones = useMemo(() => {
     try {
       return Intl.supportedValuesOf("timeZone")
-    } catch (e) {
+    } catch (_e) {
+      // Fix: Changed e to _e to satisfy eslint rule
       // Fallback for older environments
       return ["UTC", "America/New_York", "America/Los_Angeles", "Europe/London", "Asia/Tokyo"]
     }
@@ -101,14 +102,15 @@ export default function EventCreatorPage() {
   const hours = useMemo(() => Array.from({ length: 12 }, (_, i) => String(i + 1)), [])
   const minutes = useMemo(() => Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0")), [])
 
-  // --- CORE LOGIC ---
+  const isoStart = generatedOutput?.isoStart
   useEffect(() => {
-    if (generatedOutput) {
-      const newFormatted = formatDate(new Date(generatedOutput.isoStart), customFormat, timezone)
+    if (isoStart) {
+      const newFormatted = formatDate(new Date(isoStart), customFormat, timezone)
       setGeneratedOutput((prev) => (prev ? { ...prev, formattedDateTime: newFormatted } : null))
     }
-  }, [customFormat, timezone]) // Removed generatedOutput?.isoStart from dependencies
+  }, [isoStart, customFormat, timezone]) // Fix: Corrected useEffect dependencies to prevent infinite loops and satisfy linter
 
+  // --- CORE LOGIC ---
   const handleGenerate = () => {
     // 1. Validation
     const newErrors: ErrorState = {}
@@ -160,8 +162,9 @@ export default function EventCreatorPage() {
         const isoStringWithOffset = `${localDateTimeString}${offset}`
         startUtc = new Date(isoStringWithOffset)
       }
-    } catch (e) {
-      console.error("Date parsing error:", e)
+    } catch (_e) {
+      // Fix: Changed e to _e to satisfy eslint rule
+      console.error("Date parsing error:", _e)
       setErrors({ date: "Could not parse the selected date and time. Please check your inputs." })
       return
     }
