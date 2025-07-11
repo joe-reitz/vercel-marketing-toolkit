@@ -70,24 +70,24 @@ export default function DateTimeTimezonePicker() {
 
   const updateZuluTime = useCallback(() => {
     if (!date) return ""
-    const [hours, minutes] = time.split(":" ).map(Number)
+    const [hours, minutes] = time.split(":").map(Number)
     const dateWithTime = new Date(date)
     dateWithTime.setHours(hours, minutes, 0, 0)
 
-    const formatter = new Intl.DateTimeFormat('en-US', {
+    const formatter = new Intl.DateTimeFormat("en-US", {
       timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
     })
 
     const parts = formatter.formatToParts(dateWithTime)
     const dateParts: { [key: string]: string } = {}
-    parts.forEach(part => {
+    parts.forEach((part) => {
       dateParts[part.type] = part.value
     })
 
@@ -102,35 +102,49 @@ export default function DateTimeTimezonePicker() {
     setZuluTime(updateZuluTime())
   }, [date, time, timezone, updateZuluTime])
 
-  const generateCalendarLink = useCallback((type: 'google' | 'agical') => {
-    if (!date || !zuluTime) return ""
-    let endDate: Date
+  const generateCalendarLink = useCallback(
+    (type: "google" | "agical") => {
+      if (!date || !zuluTime) return ""
+      let endDate: Date
 
-    try {
-      endDate = addMinutes(parseISO(zuluTime), duration)
-    } catch (err) {
-      console.error("Invalid zuluTime:", zuluTime, err)
-      return ""
-    }
+      try {
+        endDate = addMinutes(parseISO(zuluTime), duration)
+      } catch (err) {
+        console.error("Invalid zuluTime:", zuluTime, err)
+        return ""
+      }
 
-    const encodedDescription = encodeURIComponent(description)
-    const startDate = zuluTime.replace(/[-:]/g, "").slice(0, -5) + "Z"
-    const endDateFormatted = format(endDate, "yyyyMMdd'T'HHmmss'Z'")
+      const encodedDescription = encodeURIComponent(description)
+      const startDate = zuluTime.replace(/[-:]/g, "").slice(0, -5) + "Z"
+      const endDateFormatted = format(endDate, "yyyyMMdd'T'HHmmss'Z'")
 
-    switch (type) {
-      case 'google':
-        return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventName)}&dates=${startDate}/${endDateFormatted}&details=${encodedDescription}&ctz=${timezone}`
-      case 'agical':
-        return `https://ics.agical.io/?startdt=${zuluTime}&enddt=${format(endDate, "yyyy-MM-dd'T'HH:mm:ss'Z'")}&subject=${encodeURIComponent(eventName)}&description=${encodedDescription}`
-    }
-  }, [date, zuluTime, duration, description, eventName, timezone])
+      switch (type) {
+        case "google":
+          return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+            eventName
+          )}&dates=${startDate}/${endDateFormatted}&details=${encodedDescription}&ctz=${timezone}`
+        case "agical":
+          return `https://ics.agical.io/?startdt=${zuluTime}&enddt=${format(
+            endDate,
+            "yyyy-MM-dd'T'HH:mm:ss'Z'"
+          )}&subject=${encodeURIComponent(eventName)}&description=${encodedDescription}`
+      }
+    },
+    [date, zuluTime, duration, description, eventName, timezone]
+  )
 
-  const handleCopyLink = (type: 'google' | 'agical') => {
+  const handleCopyLink = (type: "google" | "agical") => {
     const link = generateCalendarLink(type)
     if (!link) return
     navigator.clipboard.writeText(link)
     setCopiedType(type)
-    type === 'google' ? setGoogleLink(link) : setIcsLink(link)
+
+    if (type === "google") {
+      setGoogleLink(link)
+    } else {
+      setIcsLink(link)
+    }
+
     setTimeout(() => setCopiedType(null), 3000)
   }
 
@@ -228,10 +242,10 @@ export default function DateTimeTimezonePicker() {
         <div className="space-y-2">
           <Button
             className="w-full bg-blue-600 text-white hover:bg-blue-700"
-            onClick={() => handleCopyLink('google')}
+            onClick={() => handleCopyLink("google")}
           >
             <span className="flex items-center">
-              {copiedType === 'google' ? (
+              {copiedType === "google" ? (
                 <>
                   <Check className="mr-2 h-4 w-4" /> Copied Google Calendar Link
                 </>
@@ -249,10 +263,10 @@ export default function DateTimeTimezonePicker() {
           <Button
             variant="outline"
             className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
-            onClick={() => handleCopyLink('agical')}
+            onClick={() => handleCopyLink("agical")}
           >
             <span className="flex items-center">
-              {copiedType === 'agical' ? (
+              {copiedType === "agical" ? (
                 <>
                   <Check className="mr-2 h-4 w-4" /> Copied .ics Calendar Link
                 </>
