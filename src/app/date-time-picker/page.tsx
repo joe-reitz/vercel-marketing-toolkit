@@ -262,7 +262,7 @@ export default function DateTimeTimezonePicker() {
         <div className="space-y-2">
           <Button
             variant="outline"
-            className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+            className="w-full border-blue-600 text-blue-600 hover:bg-blue-800"
             onClick={() => handleCopyLink("agical")}
           >
             <span className="flex items-center">
