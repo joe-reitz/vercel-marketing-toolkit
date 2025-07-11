@@ -416,7 +416,7 @@ export default function EventCreatorPage() {
               onClick={handleGenerate}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-base font-medium"
             >
-              Generate Links
+              Generate Calendar Files & Date/Time Values
             </Button>
           </div>
 
