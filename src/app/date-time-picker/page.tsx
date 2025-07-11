@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Check, Clipboard, ChevronsUpDown } from "lucide-react"
+import { Check, Clipboard, ChevronsUpDown, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type ErrorState = {
@@ -414,8 +414,9 @@ export default function EventCreatorPage() {
           <div className="mt-8">
             <Button
               onClick={handleGenerate}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-base font-medium"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-base font-medium flex items-center justify-center"
             >
+              <Sparkles className="mr-2 h-5 w-5" /> {/* Add icon to button */}
               Generate Links
             </Button>
           </div>
