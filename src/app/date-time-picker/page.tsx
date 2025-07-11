@@ -125,6 +125,12 @@ export default function EventCreatorPage() {
       return
     }
 
+    // Add an explicit guard to satisfy TypeScript's static analysis
+    if (!date) {
+      // This case is handled by the validation above, but this check satisfies the compiler.
+      return
+    }
+
     // 2. Time Conversion
     let hour24 = Number.parseInt(hour)
     if (ampm === "PM" && hour24 < 12) {
