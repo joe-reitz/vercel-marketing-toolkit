@@ -137,14 +137,29 @@ export default function DateTimeTimezonePicker() {
   return (
     <div className="space-y-4 p-4 max-w-md mx-auto">
       <div className="space-y-2">
+        <Label htmlFor="eventName">Event Name</Label>
+        <Input
+          id="eventName"
+          value={eventName}
+          onChange={(e) => setEventName(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="date">Date</Label>
         <div className="relative">
           <Button
             variant="outline"
-            className={cn(
-              "w-full justify-start text-left font-normal",
-              !date && "text-muted-foreground"
-            )}
+            className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
             onClick={() => setIsCalendarOpen(!isCalendarOpen)}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -197,16 +212,6 @@ export default function DateTimeTimezonePicker() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="eventName">Event Name</Label>
-        <Input
-          id="eventName"
-          value={eventName}
-          onChange={(e) => setEventName(e.target.value)}
-          className="w-full"
-        />
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="duration">Duration (minutes)</Label>
         <Input
           type="number"
@@ -214,18 +219,6 @@ export default function DateTimeTimezonePicker() {
           value={duration}
           onChange={(e) => setDuration(Number(e.target.value))}
           min="1"
-          className="w-full"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full"
-          rows={3}
         />
       </div>
 
@@ -237,19 +230,19 @@ export default function DateTimeTimezonePicker() {
             className="w-full bg-blue-600 text-white hover:bg-blue-700"
             onClick={() => handleCopyLink('google')}
           >
-            {copiedType === 'google' ? (
-              <>
-                <Check className="mr-2 h-4 w-4" /> Copied Google Calendar Link
-              </>
-            ) : (
-              <>
-                <Copy className="mr-2 h-4 w-4" /> Copy Google Calendar Link
-              </>
-            )}
+            <span className="flex items-center">
+              {copiedType === 'google' ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" /> Copied Google Calendar Link
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" /> Copy Google Calendar Link
+                </>
+              )}
+            </span>
           </Button>
-          {googleLink && (
-            <p className="break-all text-sm text-muted-foreground">{googleLink}</p>
-          )}
+          {googleLink && <p className="break-all text-sm text-muted-foreground">{googleLink}</p>}
         </div>
 
         <div className="space-y-2">
@@ -258,19 +251,19 @@ export default function DateTimeTimezonePicker() {
             className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
             onClick={() => handleCopyLink('agical')}
           >
-            {copiedType === 'agical' ? (
-              <>
-                <Check className="mr-2 h-4 w-4" /> Copied .ics Calendar Link
-              </>
-            ) : (
-              <>
-                <Copy className="mr-2 h-4 w-4" /> Copy .ics Calendar Link
-              </>
-            )}
+            <span className="flex items-center">
+              {copiedType === 'agical' ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" /> Copied .ics Calendar Link
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" /> Copy .ics Calendar Link
+                </>
+              )}
+            </span>
           </Button>
-          {icsLink && (
-            <p className="break-all text-sm text-muted-foreground">{icsLink}</p>
-          )}
+          {icsLink && <p className="break-all text-sm text-muted-foreground">{icsLink}</p>}
         </div>
       </div>
     </div>
