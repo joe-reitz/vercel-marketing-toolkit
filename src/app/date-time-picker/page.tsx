@@ -59,54 +59,42 @@ export default function DateTimeTimezonePicker() {
   const [date, setDate] = useState<Date | undefined>(undefined)
   const [time, setTime] = useState("12:00")
   const [timezone, setTimezone] = useState("UTC")
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
-  const [copied, setCopied] = useState(false)
   const [eventName, setEventName] = useState("New Event")
   const [duration, setDuration] = useState(60)
   const [description, setDescription] = useState("")
-  const [googleCopied, setGoogleCopied] = useState(false)
-  const [iCalCopied, setICalCopied] = useState(false)
-  const [outlookCopied, setOutlookCopied] = useState(false)
   const [zuluTime, setZuluTime] = useState("")
-
-  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTime(e.target.value)
-  }
-
-  const toggleCalendar = () => {
-    setIsCalendarOpen(!isCalendarOpen)
-  }
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+  const [googleLink, setGoogleLink] = useState("")
+  const [icsLink, setIcsLink] = useState("")
+  const [copiedType, setCopiedType] = useState<"google" | "agical" | null>(null)
 
   const updateZuluTime = useCallback(() => {
     if (!date) return ""
-    const [hours, minutes] = time.split(':').map(Number)
+    const [hours, minutes] = time.split(":").map(Number)
     const dateWithTime = new Date(date)
     dateWithTime.setHours(hours, minutes, 0, 0)
-    
-    // Convert to UTC
-    const formatter = new Intl.DateTimeFormat('en-US', {
+
+    const formatter = new Intl.DateTimeFormat("en-US", {
       timeZone: timezone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
     })
-    
+
     const parts = formatter.formatToParts(dateWithTime)
-    const dateParts: {[key: string]: string} = {}
-    parts.forEach(part => {
+    const dateParts: { [key: string]: string } = {}
+    parts.forEach((part) => {
       dateParts[part.type] = part.value
     })
-    
-    // Construct UTC date
+
     const utcDate = new Date(
       `${dateParts.year}-${dateParts.month}-${dateParts.day}T${dateParts.hour}:${dateParts.minute}:${dateParts.second}.000Z`
     )
-    
-    // Format the UTC date as Zulu time
+
     return utcDate.toISOString()
   }, [date, time, timezone])
 
@@ -114,68 +102,79 @@ export default function DateTimeTimezonePicker() {
     setZuluTime(updateZuluTime())
   }, [date, time, timezone, updateZuluTime])
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(zuluTime)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
+  const generateCalendarLink = useCallback(
+    (type: "google" | "agical") => {
+      if (!date || !zuluTime) return ""
+      let endDate: Date
 
-  const generateCalendarLink = useCallback((type: 'google' | 'ical' | 'outlook') => {
-    if (!date) return ""
-    const endDate = addMinutes(parseISO(zuluTime), duration)
-    const encodedDescription = encodeURIComponent(description)
-    const startDate = zuluTime.replace(/[-:]/g, "").slice(0, -5) + "Z"
-    const endDateFormatted = format(endDate, "yyyyMMdd'T'HHmmss'Z'")
+      try {
+        endDate = addMinutes(parseISO(zuluTime), duration)
+      } catch (err) {
+        console.error("Invalid zuluTime:", zuluTime, err)
+        return ""
+      }
 
-    switch (type) {
-      case 'google':
-        return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventName)}&dates=${startDate}/${endDateFormatted}&details=${encodedDescription}&ctz=${timezone}`
-      case 'ical':
-        return `data:text/calendar;charset=utf8,BEGIN:VCALENDAR
-VERSION:2.0
-BEGIN:VEVENT
-DTSTART:${startDate}
-DTEND:${endDateFormatted}
-SUMMARY:${eventName}
-DESCRIPTION:${description.replace(/\n/g, "\\n")}
-END:VEVENT
-END:VCALENDAR`
-      case 'outlook':
-        return `https://ics.agical.io/?startdt=${zuluTime}&enddt=${format(endDate, "yyyy-MM-dd'T'HH:mm:ss'Z'")}&subject=${encodeURIComponent(eventName)}&description=${encodedDescription}`
-    }
-  }, [date, zuluTime, duration, description, eventName, timezone])
+      const encodedDescription = encodeURIComponent(description)
+      const startDate = zuluTime.replace(/[-:]/g, "").slice(0, -5) + "Z"
+      const endDateFormatted = format(endDate, "yyyyMMdd'T'HHmmss'Z'")
 
-  const handleCopy = (type: 'google' | 'ical' | 'outlook') => {
+      switch (type) {
+        case "google":
+          return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
+            eventName
+          )}&dates=${startDate}/${endDateFormatted}&details=${encodedDescription}&ctz=${timezone}`
+        case "agical":
+          return `https://ics.agical.io/?startdt=${zuluTime}&enddt=${format(
+            endDate,
+            "yyyy-MM-dd'T'HH:mm:ss'Z'"
+          )}&subject=${encodeURIComponent(eventName)}&description=${encodedDescription}`
+      }
+    },
+    [date, zuluTime, duration, description, eventName, timezone]
+  )
+
+  const handleCopyLink = (type: "google" | "agical") => {
     const link = generateCalendarLink(type)
+    if (!link) return
     navigator.clipboard.writeText(link)
-    switch (type) {
-      case 'google':
-        setGoogleCopied(true)
-        setTimeout(() => setGoogleCopied(false), 2000)
-        break
-      case 'ical':
-        setICalCopied(true)
-        setTimeout(() => setICalCopied(false), 2000)
-        break
-      case 'outlook':
-        setOutlookCopied(true)
-        setTimeout(() => setOutlookCopied(false), 2000)
-        break
+    setCopiedType(type)
+
+    if (type === "google") {
+      setGoogleLink(link)
+    } else {
+      setIcsLink(link)
     }
+
+    setTimeout(() => setCopiedType(null), 3000)
   }
 
   return (
     <div className="space-y-4 p-4 max-w-md mx-auto">
       <div className="space-y-2">
+        <Label htmlFor="eventName">Event Name</Label>
+        <Input
+          id="eventName"
+          value={eventName}
+          onChange={(e) => setEventName(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="date">Date</Label>
         <div className="relative">
           <Button
             variant="outline"
-            className={cn(
-              "w-full justify-start text-left font-normal",
-              !date && "text-muted-foreground"
-            )}
-            onClick={toggleCalendar}
+            className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+            onClick={() => setIsCalendarOpen(!isCalendarOpen)}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
             {date ? format(date, "PPP") : <span>Pick a date</span>}
@@ -203,7 +202,7 @@ END:VCALENDAR`
             type="time"
             id="time"
             value={time}
-            onChange={handleTimeChange}
+            onChange={(e) => setTime(e.target.value)}
             className="w-full pl-10"
           />
           <Clock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
@@ -226,109 +225,59 @@ END:VCALENDAR`
         </Select>
       </div>
 
-      <div className="pt-4 space-y-2">
-        <p className="text-sm text-muted-foreground">
-          Selected: {date ? format(date, "PPP") : "No date"} at {time} {timezone}
-        </p>
-        <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Zulu Time:</p>
-          <p className="text-sm text-amber-500">{zuluTime}</p>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 bg-blue-600 text-white hover:bg-blue-700"
-            onClick={copyToClipboard}
-          >
-            {copied ? (
-              <Check className="h-4 w-4" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="duration">Duration (minutes)</Label>
+        <Input
+          type="number"
+          id="duration"
+          value={duration}
+          onChange={(e) => setDuration(Number(e.target.value))}
+          min="1"
+        />
       </div>
 
-      <div className="space-y-2 border-t pt-4 mt-4">
+      <div className="pt-4 space-y-4 border-t mt-4">
         <h3 className="text-lg font-semibold">Add to Calendar</h3>
-        <div className="space-y-2">
-          <Label htmlFor="eventName">Event Name</Label>
-          <Input
-            id="eventName"
-            value={eventName}
-            onChange={(e) => setEventName(e.target.value)}
-            className="w-full"
-          />
-        </div>
 
         <div className="space-y-2">
-          <Label htmlFor="duration">Duration (minutes)</Label>
-          <Input
-            type="number"
-            id="duration"
-            value={duration}
-            onChange={(e) => setDuration(Number(e.target.value))}
-            min="1"
-            className="w-full"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full"
-            rows={3}
-          />
+          <Button
+            className="w-full bg-blue-600 text-white hover:bg-blue-700"
+            onClick={() => handleCopyLink("google")}
+          >
+            <span className="flex items-center">
+              {copiedType === "google" ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" /> Copied Google Calendar Link
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" /> Copy Google Calendar Link
+                </>
+              )}
+            </span>
+          </Button>
+          {googleLink && <p className="break-all text-sm text-muted-foreground">{googleLink}</p>}
         </div>
 
         <div className="space-y-2">
           <Button
             variant="outline"
-            className={`w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center transition-all duration-200 ${
-              googleCopied ? 'bg-green-600' : ''
-            }`}
-            onClick={() => handleCopy('google')}
-            disabled={!date}
+            className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+            onClick={() => handleCopyLink("agical")}
           >
-            {googleCopied ? (
-              <Check className="mr-2  h-4 w-4" />
-            ) : (
-              <Copy className="mr-2 h-4 w-4" />
-            )}
-            {googleCopied ? 'Copied!' : 'Copy Google Calendar Link'}
+            <span className="flex items-center">
+              {copiedType === "agical" ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" /> Copied .ics Calendar Link
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" /> Copy .ics Calendar Link
+                </>
+              )}
+            </span>
           </Button>
-          <Button
-            variant="outline"
-            className={`w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center transition-all duration-200 ${
-              iCalCopied ? 'bg-green-600' : ''
-            }`}
-            onClick={() => handleCopy('ical')}
-            disabled={!date}
-          >
-            {iCalCopied ? (
-              <Check className="mr-2 h-4 w-4" />
-            ) : (
-              <Copy className="mr-2 h-4 w-4" />
-            )}
-            {iCalCopied ? 'Copied!' : 'Copy iCal Link'}
-          </Button>
-          <Button
-            variant="outline"
-            className={`w-full bg-blue-600 text-white hover:bg-blue-700 flex items-center justify-center transition-all duration-200 ${
-              outlookCopied ? 'bg-green-600' : ''
-            }`}
-            onClick={() => handleCopy('outlook')}
-            disabled={!date}
-          >
-            {outlookCopied ? (
-              <Check className="mr-2 h-4 w-4" />
-            ) : (
-              <Copy className="mr-2 h-4 w-4" />
-            )}
-            {outlookCopied ? 'Copied!' : 'Copy Outlook Calendar Link'}
-          </Button>
+          {icsLink && <p className="break-all text-sm text-muted-foreground">{icsLink}</p>}
         </div>
       </div>
     </div>

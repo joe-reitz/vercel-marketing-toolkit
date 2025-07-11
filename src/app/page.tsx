@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarDays, Image, LinkIcon, Mail, MessageSquare, ScanSearch } from 'lucide-react'
+import { CalendarDays, Image, LinkIcon, MessageSquare, ScanSearch } from 'lucide-react'
 import { Inter } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -12,10 +12,8 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
             { href: '/naming-generators', icon: MessageSquare, title: 'Naming Generators' },
-            { href: '/date-time-picker', icon: CalendarDays, title: 'Date & Time Picker' },
+            { href: '/date-time-picker', icon: CalendarDays, title: 'Date/Time and Calendar Generator' },
             { href: '/utm-generator', icon: LinkIcon, title: 'UTM Parameter Generator' },
-            { href: '/email-priority-planner', icon: Mail, title: 'Email Prioritization' },
-            { href: '/email-builder', icon: Mail, title: 'Email Builder' },
             { href: '/image-generator', icon: Image, title: 'Image Generator' },
             { href: '/qr-code-generator', icon: Image, title: 'QR Code Generator' },
             { href: '/soql-query-helper', icon: ScanSearch, title: 'SOQL Query Helper' },
