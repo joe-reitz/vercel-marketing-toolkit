@@ -50,7 +50,7 @@ const eventSubtypes = ["COMMUNITY", "CORPORATE", "FIELD", "SPONSORED", "PARTNER"
 const ppcSubtypes = ["LinkedIn", "Google", "Bing", "Other"]
 const sdrSubtypes = ["Marketing-FUP", "AutoOutbound"]
 const webinarSubtypes = ["Vercel", "3rdParty"]
-
+ 
 const assetTypes = ["Email", "List", "Audience"]
 
 export default function MarketingNameGenerators() {
