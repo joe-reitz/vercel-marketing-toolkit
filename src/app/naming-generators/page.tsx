@@ -54,7 +54,7 @@ const webinarSubtypes = ["Vercel", "3rdParty"]
 const assetTypes = ["Email", "List", "Audience"]
 
 export default function MarketingNameGenerators() {
-  const [activeTab, setActiveTab] = useState("journey")
+  const [activeTab, setActiveTab] = useState("sfdc")
   const { toast } = useToast()
 
   // State for Region Selection
@@ -225,185 +225,10 @@ export default function MarketingNameGenerators() {
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="sfdc">SFDC Campaign</TabsTrigger>
             <TabsTrigger value="journey">Inflection Journey</TabsTrigger>
             <TabsTrigger value="asset">Inflection Asset</TabsTrigger>
-            <TabsTrigger value="sfdc">SFDC Campaign</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="journey" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="region">Region</Label>
-              <Select onValueChange={setRegion}>
-                <SelectTrigger id="region">
-                  <SelectValue placeholder="Select region" />
-                </SelectTrigger>
-                <SelectContent>
-                  {regionOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="journeyType">Type</Label>
-              <Select onValueChange={setJourneyType}>
-                <SelectTrigger id="journeyType">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {journeyTypeOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="brand">Brand</Label>
-              <Select onValueChange={setBrand}>
-                <SelectTrigger id="brand">
-                  <SelectValue placeholder="Select brand" />
-                </SelectTrigger>
-                <SelectContent>
-                  {brandOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="journeyName">Name</Label>
-              <Input
-                id="journeyName"
-                value={journeyName}
-                onChange={(e) => setJourneyName(e.target.value)}
-                placeholder="Enter journey name (min 4 characters)"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="launchDate">Launch Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn("w-full justify-start text-left font-normal", !launchDate && "text-muted-foreground")}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {launchDate ? format(launchDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={launchDate} onSelect={setLaunchDate} initialFocus />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="linearTicketId">Linear Ticket ID</Label>
-              <Input
-                id="linearTicketId"
-                value={linearTicketId}
-                onChange={(e) => setLinearTicketId(e.target.value)}
-                placeholder="Enter Linear Ticket ID"
-              />
-            </div>
-
-            <Button onClick={generateJourneyName} className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white">
-              Generate Journey Name
-            </Button>
-
-            {generatedJourneyName && (
-              <div
-                className={`mt-4 p-4 rounded flex items-center justify-between ${generatedJourneyName.startsWith("Please") ? "bg-red-600" : "bg-secondary"}`}
-              >
-                <div className="flex-1 mr-4">
-                  <Label>Generated Journey Name:</Label>
-                  <p className="text-lg font-mono break-all">{generatedJourneyName}</p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleCopy(generatedJourneyName)}
-                  className={cn("transition-colors", isCopied && "bg-green-500 text-white hover:bg-green-600")}
-                >
-                  {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="asset" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="assetType">Asset Type</Label>
-              <Select onValueChange={setAssetType}>
-                <SelectTrigger id="assetType">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {assetTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="assetNumber">Asset Number</Label>
-              <Input
-                id="assetNumber"
-                type="number"
-                min="1"
-                step="1"
-                value={assetName}
-                onChange={(e) => setAssetName(e.target.value)}
-                placeholder="Enter asset number (integer)"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fullJourneyName">Full Journey Name</Label>
-              <Input
-                id="fullJourneyName"
-                value={fullJourneyName}
-                onChange={(e) => setJourneyName(formatTextWithHyphens(e.target.value))}
-                placeholder="Enter full journey name"
-              />
-            </div>
-
-            <Button onClick={generateAssetName} className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white">
-              Generate Asset Name
-            </Button>
-
-            {generatedAssetName && (
-              <div
-                className={`mt-4 p-4 rounded flex items-center justify-between ${generatedAssetName.startsWith("Please") ? "bg-red-600" : "bg-secondary"}`}
-              >
-                <div className="flex-1 mr-4">
-                  <Label>Generated Asset Name:</Label>
-                  <p className="text-lg font-mono break-all">{generatedAssetName}</p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleCopy(generatedAssetName)}
-                  className={cn("transition-colors", isCopied && "bg-green-500 text-white hover:bg-green-600")}
-                >
-                  {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-            )}
-          </TabsContent>
 
           <TabsContent value="sfdc" className="space-y-4">
             <div className="space-y-2">
@@ -572,6 +397,181 @@ export default function MarketingNameGenerators() {
                   variant="outline"
                   size="icon"
                   onClick={() => handleCopy(generatedSfdcName)}
+                  className={cn("transition-colors", isCopied && "bg-green-500 text-white hover:bg-green-600")}
+                >
+                  {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="journey" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="region">Region</Label>
+              <Select onValueChange={setRegion}>
+                <SelectTrigger id="region">
+                  <SelectValue placeholder="Select region" />
+                </SelectTrigger>
+                <SelectContent>
+                  {regionOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="journeyType">Type</Label>
+              <Select onValueChange={setJourneyType}>
+                <SelectTrigger id="journeyType">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {journeyTypeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="brand">Brand</Label>
+              <Select onValueChange={setBrand}>
+                <SelectTrigger id="brand">
+                  <SelectValue placeholder="Select brand" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brandOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="journeyName">Name</Label>
+              <Input
+                id="journeyName"
+                value={journeyName}
+                onChange={(e) => setJourneyName(e.target.value)}
+                placeholder="Enter journey name (min 4 characters)"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="launchDate">Launch Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn("w-full justify-start text-left font-normal", !launchDate && "text-muted-foreground")}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {launchDate ? format(launchDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar mode="single" selected={launchDate} onSelect={setLaunchDate} initialFocus />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="linearTicketId">Linear Ticket ID</Label>
+              <Input
+                id="linearTicketId"
+                value={linearTicketId}
+                onChange={(e) => setLinearTicketId(e.target.value)}
+                placeholder="Enter Linear Ticket ID"
+              />
+            </div>
+
+            <Button onClick={generateJourneyName} className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white">
+              Generate Journey Name
+            </Button>
+
+            {generatedJourneyName && (
+              <div
+                className={`mt-4 p-4 rounded flex items-center justify-between ${generatedJourneyName.startsWith("Please") ? "bg-red-600" : "bg-secondary"}`}
+              >
+                <div className="flex-1 mr-4">
+                  <Label>Generated Journey Name:</Label>
+                  <p className="text-lg font-mono break-all">{generatedJourneyName}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleCopy(generatedJourneyName)}
+                  className={cn("transition-colors", isCopied && "bg-green-500 text-white hover:bg-green-600")}
+                >
+                  {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="asset" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="assetType">Asset Type</Label>
+              <Select onValueChange={setAssetType}>
+                <SelectTrigger id="assetType">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {assetTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="assetNumber">Asset Number</Label>
+              <Input
+                id="assetNumber"
+                type="number"
+                min="1"
+                step="1"
+                value={assetName}
+                onChange={(e) => setAssetName(e.target.value)}
+                placeholder="Enter asset number (integer)"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fullJourneyName">Full Journey Name</Label>
+              <Input
+                id="fullJourneyName"
+                value={fullJourneyName}
+                onChange={(e) => setJourneyName(formatTextWithHyphens(e.target.value))}
+                placeholder="Enter full journey name"
+              />
+            </div>
+
+            <Button onClick={generateAssetName} className="w-full bg-[#0070f3] hover:bg-[#0060df] text-white">
+              Generate Asset Name
+            </Button>
+
+            {generatedAssetName && (
+              <div
+                className={`mt-4 p-4 rounded flex items-center justify-between ${generatedAssetName.startsWith("Please") ? "bg-red-600" : "bg-secondary"}`}
+              >
+                <div className="flex-1 mr-4">
+                  <Label>Generated Asset Name:</Label>
+                  <p className="text-lg font-mono break-all">{generatedAssetName}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleCopy(generatedAssetName)}
                   className={cn("transition-colors", isCopied && "bg-green-500 text-white hover:bg-green-600")}
                 >
                   {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
