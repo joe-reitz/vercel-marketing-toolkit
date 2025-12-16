@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
 
     let systemPrompt: string
     let userContent: string
-    let isEmail = contentType === 'email'
+    const isEmail = contentType === 'email'
 
     if (isEmail) {
       systemPrompt = `${VERCEL_STYLE_GUIDE}

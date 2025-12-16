@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Sparkles, Copy, Check, AlertCircle, Maximize2 } from "lucide-react"
-import { cn } from "@/lib/utils"
 
 const contentTypes = [
   { value: "email", label: "Email" },
@@ -163,7 +162,7 @@ export default function ContentAnalyzerPage() {
             Content Analyzer & Rewriter
           </CardTitle>
           <CardDescription className="text-gray-400">
-            Rewrite your content following Vercel's style guide using AI.
+            Rewrite your content following Vercel&apos;s style guide using AI.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
@@ -538,13 +537,13 @@ export default function ContentAnalyzerPage() {
               <div className="bg-gray-900/50 border border-gray-800 rounded-md p-3">
                 <h4 className="text-white text-sm font-medium mb-1.5">✨ Active Voice</h4>
                 <p className="text-gray-400 text-xs">
-                  Say "you" more than "we". Stay positive.
+                  Say &quot;you&quot; more than &quot;we&quot;. Stay positive.
                 </p>
               </div>
               <div className="bg-gray-900/50 border border-gray-800 rounded-md p-3">
                 <h4 className="text-white text-sm font-medium mb-1.5">❌ Strip Qualifiers</h4>
                 <p className="text-gray-400 text-xs">
-                  Remove "basically", "probably", "might".
+                  Remove &quot;basically&quot;, &quot;probably&quot;, &quot;might&quot;.
                 </p>
               </div>
             </div>
