@@ -15,7 +15,8 @@ export default function Navigation() {
           <li><Link href="/utm-generator" className="hover:text-vercel-gray transition-colors">UTM Generator</Link></li>
           <li><Link href="/image-generator" className="hover:text-vercel-gray transition-colors">Image Generator</Link></li>
           <li><Link href="/qr-code-generator" className="hover:text-vercel-gray transition-colors">QR Code Generator</Link></li>
-          <li><Link href="/soql-query-helper" className="hover:text-vercel-gray transition-colors">SOQL Query Helper</Link></li>
+          <li><Link href="/content-analyzer" className="hover:text-vercel-gray transition-colors">Content Analyzer</Link></li>
+          <li><Link href="/soql-query-helper" className="hover:text-vercel-gray transition-colors">Data Tools</Link></li>
         </ul>
       </div>
     </nav>
