@@ -14,7 +14,7 @@ const utmSources = [
   "discord", "stackadapt", "retail_dive", "foundry", "selling_simplified",
   "spiceworks", "partner", "sponsor", "youtube", "turbo", "next-site",
   "vercel-site", "turborepo-site", "svelte-site", "marketo", "brand",
-  "event", "tldr", "ai_sdk", "tanstack", "v0-site", "shadcn-site", "inflection"
+  "event", "tldr", "ai_sdk", "tanstack", "v0-site", "shadcn-site", "cio"
 ]
 
 const utmMediums = ["cpc", "email", "display", "social", "print", "third_party", "web", "newsletter", "blog", "ebook"]
@@ -24,7 +24,7 @@ const commonGroupings = [
   { medium: "social", source: "twitter" },
   { medium: "social", source: "linkedin" },
   { medium: "cpc", source: "google" },
-  { medium: "email", source: "inflection" },
+  { medium: "email", source: "cio" },
   { medium: "third_party", source: "partner" },
 ]
 
@@ -40,7 +40,10 @@ export default function UTMGenerator() {
   const { toast } = useToast()
 
   const generateUrl = () => {
-    if (!baseUrl.match(/^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*)?$/)) {
+    const trimmedBase = baseUrl.trim()
+
+    // Base URL is optional. Only validate it if one was provided.
+    if (trimmedBase && !trimmedBase.match(/^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*)?$/)) {
       toast({
         title: "Invalid base URL",
         description: "Please enter a valid domain and path.",
@@ -57,9 +60,14 @@ export default function UTMGenerator() {
       utm_campaign: utmCampaign
     })
     const queryStr = params.toString()
-    const url = `https://${baseUrl}${baseUrl.includes('?') ? '&' : '?'}${queryStr}`
-    setGeneratedUrl(url)
     setQueryString(queryStr)
+
+    if (trimmedBase) {
+      const url = `https://${trimmedBase}${trimmedBase.includes('?') ? '&' : '?'}${queryStr}`
+      setGeneratedUrl(url)
+    } else {
+      setGeneratedUrl("")
+    }
   }
 
   const handleCopy = () => {
@@ -93,7 +101,7 @@ export default function UTMGenerator() {
 
       <div className="space-y-4">
         <div>
-          <Label htmlFor="baseUrl">Base URL</Label>
+          <Label htmlFor="baseUrl">Base URL <span className="text-muted-foreground font-normal">(optional)</span></Label>
           <div className="flex">
             <span className="inline-flex items-center px-3 text-sm bg-muted border border-r-0 border-input rounded-l-md">
               https://
@@ -170,25 +178,27 @@ export default function UTMGenerator() {
           Generate UTM URL
         </Button>
 
-        {generatedUrl && (
+        {queryString && (
           <div className="space-y-3">
-            {/* Full URL */}
-            <div className="p-4 bg-card border border-border rounded-lg">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <Label className="text-xs font-semibold text-muted-foreground mb-2 block">Full UTM URL</Label>
-                  <p className="text-sm font-mono break-all">{generatedUrl}</p>
+            {/* Full URL — only when a base URL was provided */}
+            {generatedUrl && (
+              <div className="p-4 bg-card border border-border rounded-lg">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <Label className="text-xs font-semibold text-muted-foreground mb-2 block">Full UTM URL</Label>
+                    <p className="text-sm font-mono break-all">{generatedUrl}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopy}
+                    className="shrink-0"
+                  >
+                    {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopy}
-                  className="shrink-0"
-                >
-                  {isCopied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                </Button>
               </div>
-            </div>
+            )}
 
             {/* Query String Only */}
             <div className="p-4 bg-card border border-border rounded-lg">
