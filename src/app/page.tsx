@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import {
   CalendarDays,
+  FileText,
   Image,
   LinkIcon,
   MessageSquare,
@@ -11,6 +12,14 @@ import {
 } from 'lucide-react'
 
 const tools = [
+  {
+    href: '/prd-generator',
+    icon: FileText,
+    title: 'Request PRD Generator',
+    description: 'Turn a rough request into a PRD your team can build from',
+    color: 'from-indigo-500/40 to-indigo-500/40 hover:from-indigo-500/50 hover:to-indigo-500/50 dark:from-indigo-300/20 dark:to-indigo-300/20 dark:hover:from-indigo-300/30 dark:hover:to-indigo-300/30',
+    lightText: false
+  },
   {
     href: '/naming-generators',
     icon: MessageSquare,
