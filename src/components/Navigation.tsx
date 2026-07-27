@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { Menu, X } from 'lucide-react'
 
 const navItems = [
+  { href: '/prd-generator', label: 'PRD' },
   { href: '/naming-generators', label: 'Naming' },
   { href: '/date-time-picker', label: 'Date & Time' },
   { href: '/utm-generator', label: 'UTM' },
