@@ -195,3 +195,89 @@
     border-color: hsl(var(--error) / 0.5);
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Email catalogue — heatmap overlay
+ *
+ * The overlay layer sits above the email iframe and must never intercept
+ * scrolling: pointer events are re-enabled only on the hotspots themselves, so
+ * hovering a link works while the page still scrolls normally.
+ *
+ * These are plain CSS rather than Tailwind utilities because the spot colors are
+ * computed per link at runtime (from click volume AND the background behind that
+ * specific link), so they arrive as inline styles regardless.
+ * ------------------------------------------------------------------------- */
+.heat-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.heat-spot {
+  position: absolute;
+  border-radius: 4px;
+  border-width: 2px;
+  border-style: solid;
+  pointer-events: auto;
+  transition: box-shadow 120ms ease;
+}
+
+.heat-spot:hover,
+.heat-spot:focus-visible {
+  /* 2px surface ring on an overlapping mark, per the mark specs. */
+  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--foreground));
+  outline: none;
+  z-index: 2;
+}
+
+.heat-spot[data-state="templated"],
+.heat-spot[data-state="unattributed"] {
+  border-style: dashed;
+}
+
+.heat-spot[data-state="cold"] {
+  border-style: dotted;
+}
+
+/* Untrackable links get the faintest possible treatment: present, outlined,
+   making no claim about clicks. */
+.heat-spot[data-state="untrackable"] {
+  border-style: solid;
+  border-width: 1px;
+}
+
+/* Dual-tone halo so a hotspot's boundary reads on any email background —
+   light content, dark hero blocks, or photography. Fixed colors, not theme
+   tokens: this sits on the email's canvas, not the toolkit's. */
+.heat-spot[data-state="hot"] {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.45),
+    0 0 0 2px rgba(11, 11, 11, 0.12);
+}
+
+/* Rank badge — the secondary encoding, so intensity never rests on hue alone. */
+.heat-rank {
+  position: absolute;
+  top: -9px;
+  left: -9px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--foreground));
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tracking deliberately switched off for this link — same quiet treatment as an
+   untrackable link, since neither is a fault. */
+.heat-spot[data-state="tracking-off"] {
+  border-style: solid;
+  border-width: 1px;
+}
