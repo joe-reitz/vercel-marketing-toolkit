@@ -150,6 +150,8 @@ export interface CatalogueIndex {
     skippedTest?: number
     /** A/B parent actions dropped — see emailActions() in scripts/ingest.ts. */
     skippedAbContainers?: number
+    /** Webhook/attribute_update/create_event steps whose "body" is JSON, not markup. */
+    skippedNonEmail?: number
   }
   emails: CatalogueIndexEntry[]
 }

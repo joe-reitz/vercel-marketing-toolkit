@@ -219,14 +219,29 @@ function abContainerIds(actions: CioAction[]): Set<string> {
   return containers
 }
 
-/** Email steps only — journeys also contain SMS, push, and webhook actions. */
+/**
+ * Email steps only.
+ *
+ * A journey also contains webhook, attribute_update, create_event, SMS and push
+ * steps, and several of those carry a `body` — a JSON payload, not markup. This
+ * previously ended in a `|| Boolean(a.body)` catch-all, which admitted all of
+ * them: a webhook step surfaced in the catalogue as an "email" whose rendering
+ * was `{"email": "{{customer.email}}", "ip": "127.0.0.1"}`.
+ *
+ * This workspace has 161 email actions and 6 non-email actions carrying bodies
+ * (4 attribute_update, 1 create_event, 1 webhook), so the type is required to be
+ * exactly "email" rather than inferred from the presence of content. Every
+ * action Customer.io returned here has a type, so nothing legitimate is lost by
+ * being strict — and being loose means shipping webhook payloads as emails.
+ */
 function emailActions(actions: CioAction[]): CioAction[] {
   const containers = abContainerIds(actions)
-  return actions.filter(
-    (a) =>
-      !containers.has(String(a.id)) &&
-      (a.type === "email" || (!a.type && a.body) || Boolean(a.body)),
-  )
+  return actions.filter((a) => a.type === "email" && !containers.has(String(a.id)))
+}
+
+/** Non-email steps that carry a body, counted so the exclusion is visible. */
+function nonEmailWithBody(actions: CioAction[]): number {
+  return actions.filter((a) => a.type !== "email" && Boolean(a.body)).length
 }
 
 
@@ -234,7 +249,14 @@ interface Collected {
   entry: CatalogueEmail
 }
 
-const stats = { skippedUnsent: 0, withoutBody: 0, reusedBody: 0, skippedTest: 0, skippedAbContainers: 0 }
+const stats = {
+  skippedUnsent: 0,
+  withoutBody: 0,
+  reusedBody: 0,
+  skippedTest: 0,
+  skippedAbContainers: 0,
+  skippedNonEmail: 0,
+}
 
 /**
  * Decide whether an email counts as "sent".
@@ -331,6 +353,7 @@ async function collectCampaigns(prior: Map<string, CatalogueIndexEntry>): Promis
     const allActions = await listCampaignActions(c.id)
     const actions = emailActions(allActions)
     stats.skippedAbContainers += abContainerIds(allActions).size
+    stats.skippedNonEmail += nonEmailWithBody(allActions)
     const results: Collected[] = []
 
     for (const a of actions) {
@@ -577,6 +600,7 @@ async function main() {
       skippedUnsent: stats.skippedUnsent,
       skippedTest: stats.skippedTest,
       skippedAbContainers: stats.skippedAbContainers,
+      skippedNonEmail: stats.skippedNonEmail,
     },
     // Strip the heavy fields — the index page never needs HTML or link lists.
     emails: collected.map(({ entry }) => ({
@@ -605,6 +629,7 @@ async function main() {
   console.log(`  skipped (never sent): ${stats.skippedUnsent}`)
   console.log(`  skipped (test names): ${stats.skippedTest}`)
   console.log(`  skipped (A/B containers): ${stats.skippedAbContainers}`)
+  console.log(`  skipped (non-email steps with a body): ${stats.skippedNonEmail}`)
   if (stats.reusedBody) console.log(`  reused unchanged bodies: ${stats.reusedBody}`)
 }
 

@@ -92,3 +92,47 @@ test("standalone actions are never mistaken for containers", () => {
   const kept = dropAbContainers([{ id: 731 }, { id: 732, parent_action_id: 729 }])
   assert.ok(kept.some((a) => a.id === 731))
 })
+
+/**
+ * Mirrors the strict type predicate in emailActions().
+ *
+ * The loose version ended in `|| Boolean(a.body)`, which admitted any journey
+ * step carrying content — so a webhook step surfaced as an email whose body was
+ * a JSON payload.
+ */
+function keepEmailActions<T extends { id: number; type?: string; body?: string; parent_action_id?: number }>(
+  actions: T[],
+): T[] {
+  const parents = new Set(
+    actions.map((a) => a.parent_action_id).filter((id): id is number => typeof id === "number").map(String),
+  )
+  const present = new Set(actions.map((a) => String(a.id)))
+  return actions.filter(
+    (a) => a.type === "email" && !(parents.has(String(a.id)) && present.has(String(a.id))),
+  )
+}
+
+test("non-email journey steps are excluded even when they carry a body", () => {
+  const kept = keepEmailActions([
+    { id: 1, type: "email", body: "<html>real</html>" },
+    { id: 2, type: "webhook", body: '{"email": "{{customer.email}}", "ip": "127.0.0.1"}' },
+    { id: 3, type: "attribute_update", body: '[{"name":"Created__c"}]' },
+    { id: 4, type: "create_event", body: '[{"name":"acceptance_date"}]' },
+  ])
+  assert.deepEqual(kept.map((a) => a.id), [1])
+})
+
+test("an email action with no body is still an email action", () => {
+  // Bodiless emails should be reported as such, not silently reclassified.
+  const kept = keepEmailActions([{ id: 1, type: "email" }])
+  assert.deepEqual(kept.map((a) => a.id), [1])
+})
+
+test("type and container filters compose", () => {
+  const kept = keepEmailActions([
+    { id: 729, type: "email" },
+    { id: 732, type: "email", body: "<html/>", parent_action_id: 729 },
+    { id: 900, type: "webhook", body: "{}" },
+  ])
+  assert.deepEqual(kept.map((a) => a.id), [732])
+})
