@@ -41,12 +41,24 @@ export function EmailViewer({ email }: { email: CatalogueEmail }) {
   // Untrackable links (mailto:, tel:, #anchors) and links with tracking switched
   // off on purpose are excluded: having no click data is their normal state, not
   // a gap worth warning about.
-  const unmatchedAnchors =
-    report?.anchors.filter(
-      (a) => !a.templated && !a.untrackable && !a.trackingDisabled && a.linkIndex == null,
-    ).length ?? 0
+  // An unmatched anchor is only a genuine gap when Customer.io returned no link
+  // data for this email at all. Otherwise its omission means zero clicks — see
+  // the note in EmailFrame — and warning about it would flag every unclicked
+  // link in the archive as a problem.
+  const hasLinkData = email.links.length > 0
+  const unmatchedAnchors = hasLinkData
+    ? 0
+    : (report?.anchors.filter(
+        (a) => !a.templated && !a.untrackable && !a.trackingDisabled && a.linkIndex == null,
+      ).length ?? 0)
   const trackingOffCount = report?.anchors.filter((a) => a.trackingDisabled).length ?? 0
   const ambiguousCount = report?.anchors.filter((a) => a.ambiguous).length ?? 0
+  // Links whose destination is shared by more than one anchor. Both get tinted
+  // with the same rank and count, which without a note reads as two separate
+  // links that each earned it.
+  const sharedDestinations = report
+    ? Array.from(report.anchorsPerLink.values()).filter((n) => n > 1).length
+    : 0
 
   return (
     <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -118,6 +130,7 @@ export function EmailViewer({ email }: { email: CatalogueEmail }) {
         unmatchedLinks={report?.unmatchedLinkIndices.length ?? 0}
         hiddenSpots={report?.hiddenSpots ?? 0}
         trackingOffCount={trackingOffCount}
+        sharedDestinations={sharedDestinations}
       />
 
       <div className="mt-4 overflow-hidden rounded-lg border border-border">
@@ -198,6 +211,7 @@ function Caveats({
   unmatchedLinks,
   hiddenSpots,
   trackingOffCount,
+  sharedDestinations,
 }: {
   email: CatalogueEmail
   templatedCount: number
@@ -206,12 +220,20 @@ function Caveats({
   unmatchedLinks: number
   hiddenSpots: number
   trackingOffCount: number
+  sharedDestinations: number
 }) {
   const notes: string[] = []
 
   if (email.linksAggregatedAcrossVariants) {
     notes.push(
       "Click counts cover every A/B variant of this newsletter, not just this one — Customer.io had no variant-level link data.",
+    )
+  }
+  if (sharedDestinations) {
+    notes.push(
+      sharedDestinations === 1
+        ? "2 or more links point at the same destination. Customer.io reports one number for that URL, so it's shown on each of them and cannot be split between them."
+        : `${sharedDestinations} destinations are each shared by more than one link. Customer.io reports one number per URL, so those counts are shown on every link that shares them and cannot be split.`,
     )
   }
   if (templatedCount) {
@@ -229,11 +251,8 @@ function Caveats({
     )
   }
   if (unmatchedAnchors - ambiguousCount > 0) {
-    const n = unmatchedAnchors - ambiguousCount
     notes.push(
-      n === 1
-        ? "1 link in the HTML has no click tracking in Customer.io."
-        : `${n} links in the HTML have no click tracking in Customer.io.`,
+      "Customer.io returned no link-click data for this email at all, so no link can be attributed. Link tracking may be switched off for this message.",
     )
   }
   if (unmatchedLinks) {

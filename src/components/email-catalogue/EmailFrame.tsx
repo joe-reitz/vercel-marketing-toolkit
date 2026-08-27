@@ -123,6 +123,18 @@ export function EmailFrame({ html, links, basis, showHeatmap, highlightLiquid, o
 
       const linkIndex = match.linkIndex
       const clicks = linkIndex != null ? clickValues[linkIndex] : 0
+
+      // Customer.io only reports links that received at least one click —
+      // verified across the whole archive: 0 of 976 reported links had zero
+      // clicks. So when an email HAS link data, a link Customer.io omitted got
+      // no clicks, and "cold" is the accurate reading. Calling that
+      // "unattributable" would flag the normal state of every unclicked link in
+      // every email as a problem.
+      //
+      // When an email has NO link data at all, that inference isn't available:
+      // tracking may be switched off for the message, so we say so instead of
+      // asserting zero.
+      const emailHasLinkData = links.length > 0
       const state: HeatState = match.templated
         ? "templated"
         : match.trackingDisabled
@@ -130,7 +142,9 @@ export function EmailFrame({ html, links, basis, showHeatmap, highlightLiquid, o
           : match.untrackable
             ? "untrackable"
             : linkIndex == null
-              ? "unattributed"
+              ? emailHasLinkData && !match.ambiguous
+                ? "cold"
+                : "unattributed"
               : clicks > 0
                 ? "hot"
                 : "cold"
@@ -338,7 +352,7 @@ function describeSpot(spot: HeatSpot, maxClicks: number): string {
     case "untrackable":
       return `${spot.match.href} — not a trackable web link, so it has no click data.`
     case "cold":
-      return `${spot.match.resolvedHref} — tracked, zero clicks.`
+      return `${spot.match.resolvedHref} — no clicks. Customer.io reports only links that were clicked, so this one received none.`
     default:
       return `${spot.match.resolvedHref} — ${spot.clicks.toLocaleString()} clicks (${share}% of the busiest link).`
   }

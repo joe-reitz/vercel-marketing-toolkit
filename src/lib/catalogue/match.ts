@@ -1,3 +1,5 @@
+import type { CatalogueLink } from "./types"
+
 /**
  * Matching rendered `<a href>` values to Customer.io's reported link metrics.
  *
@@ -170,6 +172,54 @@ export function pathKey(rawHref: string): string | null {
   } catch {
     return null
   }
+}
+
+// =============================================================================
+// Merging equivalent reported links
+// =============================================================================
+
+/**
+ * Collapse reported links that point at the same destination.
+ *
+ * Customer.io keys click metrics by the href as authored, so one destination can
+ * come back more than once — most commonly the same URL with and without HTML
+ * entity escaping (`&amp;` vs `&`), which happens when a template is edited by
+ * different tools over its life:
+ *
+ *   https://vercel.com/x?a=1&utm_source=cio
+ *   https://vercel.com/x?a=1&amp;utm_source=cio
+ *
+ * Those are one link that people clicked, with its clicks split across two ids.
+ * Left unmerged they collide on every match tier, and the ambiguity guard then
+ * correctly refuses to attribute either — so a real, heavily-clicked link
+ * renders as "not attributable". Merging fixes both the attribution and the
+ * total, since clicks to one destination belong in one number.
+ *
+ * Counts are summed. Order is preserved so the first-seen form stays canonical.
+ */
+export function mergeEquivalentLinks(links: CatalogueLink[]): CatalogueLink[] {
+  const byKey = new Map<string, CatalogueLink>()
+  const order: string[] = []
+
+  for (const link of links) {
+    // Fall back to the decoded href for values normalizeUrl can't parse
+    // (mailto:, anchors), so those still dedupe exactly.
+    const key = normalizeUrl(link.href) ?? decodeEntities(link.href)
+    const existing = byKey.get(key)
+    if (!existing) {
+      byKey.set(key, { ...link, unique: { ...link.unique }, raw: { ...link.raw } })
+      order.push(key)
+      continue
+    }
+    existing.unique.all += link.unique.all
+    existing.unique.human += link.unique.human
+    existing.unique.machine += link.unique.machine
+    existing.raw.all += link.raw.all
+    existing.raw.human += link.raw.human
+    existing.raw.machine += link.raw.machine
+  }
+
+  return order.map((k) => byKey.get(k)!)
 }
 
 // =============================================================================

@@ -56,6 +56,7 @@ import {
   transactionalLinks,
 } from "../src/lib/cio/client"
 import type { CioAction, CioLinkMetric } from "../src/lib/cio/types"
+import { mergeEquivalentLinks } from "../src/lib/catalogue/match"
 import { composeEmailHtml, extractSearchText } from "../src/lib/catalogue/render"
 import { readEmail, readIndex } from "../src/lib/catalogue/snapshot"
 import {
@@ -157,7 +158,10 @@ function toLinks(uniqueRes: CioLinkMetric[], rawRes: CioLinkMetric[]): Catalogue
 
   ingest(uniqueRes, "unique")
   ingest(rawRes, "raw")
-  return Array.from(byHref.values())
+  // Customer.io can report one destination under several hrefs (typically the
+  // same URL with and without entity escaping). Merge them so the clicks land
+  // in one number instead of colliding and being dropped as ambiguous.
+  return mergeEquivalentLinks(Array.from(byHref.values()))
 }
 
 /** Email steps only — journeys also contain SMS, push, and webhook actions. */

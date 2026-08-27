@@ -8,6 +8,7 @@ import {
   decodeEntities,
   isUntrackable,
   resolveCioLink,
+  mergeEquivalentLinks,
 } from "./match"
 
 const link = (href: string) => ({ href })
@@ -278,4 +279,72 @@ test("_cio_id is stripped like other tracking params", () => {
     [link("https://vercel.com/ship?_cio_id=deadbeef")],
   )
   assert.equal(report.anchors[0].tier, "normalized")
+})
+
+// =============================================================================
+// Merging equivalent reported links
+// =============================================================================
+
+const counted = (href: string, human: number, machine = 0) => ({
+  href,
+  unique: { all: human + machine, human, machine },
+  raw: { all: (human + machine) * 2, human: human * 2, machine: machine * 2 },
+})
+
+test("the same URL escaped and unescaped merges into one link", () => {
+  // Real case from production: Customer.io reported one destination twice, once
+  // with &amp; and once with &, splitting its clicks across two ids. Unmerged,
+  // both collide on every tier and the ambiguity guard drops the attribution.
+  const merged = mergeEquivalentLinks([
+    counted("https://vercel.com/x?a=1&utm_source=cio", 100, 10),
+    counted("https://vercel.com/x?a=1&amp;utm_source=cio", 50, 5),
+  ])
+  assert.equal(merged.length, 1)
+  assert.equal(merged[0].unique.human, 150)
+  assert.equal(merged[0].unique.machine, 15)
+  assert.equal(merged[0].raw.human, 300)
+})
+
+test("merging makes a previously ambiguous anchor attributable", () => {
+  const links = mergeEquivalentLinks([
+    counted("https://vercel.com/startups/accepted?utm_campaign=SFCTA", 80),
+    counted("https://vercel.com/startups/accepted?amp;utm_campaign=SFCTA", 20),
+  ])
+  const report = matchAnchors(["https://vercel.com/startups/accepted?utm_campaign=SFCTA"], links)
+  assert.equal(report.anchors[0].linkIndex, 0)
+  assert.ok(!report.anchors[0].ambiguous)
+})
+
+test("genuinely different destinations are never merged", () => {
+  const merged = mergeEquivalentLinks([
+    counted("https://vercel.com/a", 10),
+    counted("https://vercel.com/b", 20),
+  ])
+  assert.equal(merged.length, 2)
+})
+
+test("URLs differing only by tracking params merge, since they share a destination", () => {
+  const merged = mergeEquivalentLinks([
+    counted("https://vercel.com/x?utm_source=cio", 10),
+    counted("https://vercel.com/x?utm_source=email", 5),
+  ])
+  assert.equal(merged.length, 1)
+  assert.equal(merged[0].unique.human, 15)
+})
+
+test("unparseable hrefs still dedupe exactly rather than collapsing together", () => {
+  const merged = mergeEquivalentLinks([
+    counted("mailto:a@b.com", 3),
+    counted("mailto:a@b.com", 2),
+    counted("mailto:c@d.com", 1),
+  ])
+  assert.equal(merged.length, 2)
+  assert.equal(merged[0].unique.human, 5)
+})
+
+test("merging preserves first-seen order and does not mutate the input", () => {
+  const input = [counted("https://vercel.com/b", 1), counted("https://vercel.com/a", 2)]
+  const merged = mergeEquivalentLinks(input)
+  assert.deepEqual(merged.map((l) => l.href), ["https://vercel.com/b", "https://vercel.com/a"])
+  assert.equal(input[0].unique.human, 1)
 })

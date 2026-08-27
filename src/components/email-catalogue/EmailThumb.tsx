@@ -89,9 +89,11 @@ export function EmailThumb({ id, height = 200 }: { id: string; height?: number }
           title=""
           aria-hidden
           srcDoc={html}
-          // Same isolation as the full viewer: no allow-scripts, so nothing in
-          // the email runs. Thumbnails need no measurement, so no same-origin.
-          sandbox=""
+          // No allow-scripts, so nothing in the email can execute — same
+          // security posture as the full viewer. allow-same-origin is required
+          // here too: a fully-sandboxed srcdoc iframe gets an opaque origin and
+          // renders blank, which showed up as white thumbnails on real emails.
+          sandbox="allow-same-origin"
           scrolling="no"
           style={{
             width: FRAME_WIDTH,

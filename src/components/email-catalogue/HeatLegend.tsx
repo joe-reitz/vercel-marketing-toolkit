@@ -27,7 +27,7 @@ export function HeatLegend({ maxClicks }: { maxClicks: number }) {
         chrome, which follows the site theme, while a real spot sits on the
         email's own background. A hardcoded dark stroke would vanish in dark mode.
       */}
-      <Swatch label="Tracked, zero clicks" className="border-dotted border-border" />
+      <Swatch label="No clicks" className="border-dotted border-border" />
       <Swatch label="Not trackable (mailto, tel, anchor)" className="border-solid border-border" />
 
       {/*
@@ -36,7 +36,7 @@ export function HeatLegend({ maxClicks }: { maxClicks: number }) {
         identical swatches only implied a distinction the colors don't make.
       */}
       <Swatch
-        label="Not attributable — Liquid, no match, or ambiguous"
+        label="Not attributable — Liquid or ambiguous"
         icon="⚠"
         className="border-dashed"
         style={{ background: "rgba(250, 178, 25, 0.18)", borderColor: UNATTRIBUTED_COLOR }}
