@@ -281,3 +281,75 @@
   border-style: solid;
   border-width: 1px;
 }
+
+/* Glow blobs — the clickmap look. Purely decorative: they never take pointer
+   events, so the hit area beneath them owns hover and clicks. */
+.heat-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(11px);
+  will-change: transform;
+}
+
+/* Transparent hit area sitting exactly on the link. Owns hover (for the
+   tooltip) and the click that opens the destination. Present even when the
+   heatmap is hidden, so links stay clickable either way. */
+.heat-hit {
+  position: absolute;
+  display: block;
+  border-radius: 3px;
+  pointer-events: auto;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.heat-hit:focus-visible {
+  outline: 2px solid hsl(var(--foreground));
+  outline-offset: 2px;
+}
+
+/* Links whose clicks can't be attributed keep a visible marker, since a glow
+   would imply a number we don't have. */
+.heat-layer[data-heatmap="on"] .heat-hit[data-flag="unattributable"] {
+  outline: 2px dashed #fab219;
+  outline-offset: 1px;
+  background: rgba(250, 178, 25, 0.12);
+}
+
+.heat-hit[data-flag="not-navigable"] {
+  cursor: default;
+}
+
+/* Hover tooltip. */
+.heat-tip {
+  position: absolute;
+  z-index: 10;
+  max-width: 320px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  font-size: 12px;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.heat-tip-count {
+  font-size: 15px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.heat-tip-href {
+  margin-top: 3px;
+  color: hsl(var(--muted-foreground));
+  word-break: break-all;
+}
+
+.heat-tip-note {
+  margin-top: 4px;
+  color: hsl(var(--muted-foreground));
+}

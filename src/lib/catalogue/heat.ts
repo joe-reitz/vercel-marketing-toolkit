@@ -173,3 +173,82 @@ export function hexToRgba(hex: string, alpha: number): string {
   const b = parseInt(clean.slice(4, 6), 16)
   return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
+
+
+// =============================================================================
+// Glow rendering — the classic clickmap look
+// =============================================================================
+
+/**
+ * Cool→hot ramp for the radial glow, in the idiom people expect from a
+ * clickmap: a violet/blue halo for light traffic, building through green and
+ * yellow to a red core on the busiest links.
+ *
+ * This is deliberately a rainbow, which the sequential-colour rule elsewhere in
+ * this file avoids — a multi-hue ramp isn't perceptually uniform and isn't
+ * colourblind-safe, so it can imply boundaries the data doesn't have. It's used
+ * here because a clickmap's job is "where did attention go", answered at a
+ * glance across a whole email, and this is the convention readers already know.
+ *
+ * The precision lives in channels that don't depend on hue: every link carries a
+ * rank badge, a hover tooltip with the exact count, and a row in the link table.
+ */
+const GLOW_RAMP = [
+  "#5b30d6", // violet — faintest
+  "#2f6fe0", // blue
+  "#1fa8c8", // cyan
+  "#2ecc71", // green
+  "#a3e635", // lime
+  "#facc15", // yellow
+  "#f97316", // orange
+  "#ef4444", // red — hottest
+] as const
+
+function rampAt(index: number): string {
+  return GLOW_RAMP[Math.max(0, Math.min(GLOW_RAMP.length - 1, index))]
+}
+
+/**
+ * Build the radial gradient for one link's glow.
+ *
+ * The core colour is the ramp position for this link's share; cooler stops fan
+ * outward to transparent. So a weak link is a soft blue smudge and a dominant
+ * one has a red centre ringed by yellow, green and blue — the intensity reads
+ * from the core, not from the blob's presence.
+ */
+export function glowGradient(share: number): string {
+  const top = Math.round(Math.min(1, Math.max(0, share)) * (GLOW_RAMP.length - 1))
+  const stops: string[] = []
+
+  // Centre outward: ramp[top] → ramp[top-1] → … → ramp[0] → transparent.
+  const rings = top + 1
+  for (let i = 0; i <= top; i++) {
+    const colour = rampAt(top - i)
+    const position = (i / rings) * 72
+    // Opaque at the core, fading with radius so email content stays legible.
+    const alpha = 0.62 * (1 - i / (rings + 0.6))
+    stops.push(`${hexToRgba(colour, Math.max(0.12, alpha))} ${position.toFixed(1)}%`)
+  }
+  stops.push(`${hexToRgba(rampAt(0), 0)} 100%`)
+
+  return `radial-gradient(circle, ${stops.join(", ")})`
+}
+
+/**
+ * Blob diameter for a link's box.
+ *
+ * Deliberately only weakly tied to the element's size. A real heatmap draws a
+ * fixed-radius kernel per click, so the blob represents click position, not the
+ * clickable area — scaling it to the element meant a large hero image produced a
+ * ~700px blob that swallowed the whole email. Clamped at both ends so a tiny
+ * text link still reads and a big image stays a marker rather than a wash.
+ */
+export function glowDiameter(width: number, height: number, share: number): number {
+  const base = Math.max(width, height)
+  return Math.min(240, Math.max(88, base * 0.5 + 64 + share * 30))
+}
+
+/** Ramp stops for the glow legend, coolest first. */
+export function glowLegendStops(): string[] {
+  return [...GLOW_RAMP]
+}
