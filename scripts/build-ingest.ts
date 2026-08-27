@@ -29,18 +29,32 @@ import { existsSync } from "node:fs"
 if (existsSync(".env.local")) loadEnv({ path: ".env.local" })
 else loadEnv()
 
+const DIM = "\x1b[2m"
 const GREEN = "\x1b[32m"
 const YELLOW = "\x1b[33m"
 const RESET = "\x1b[0m"
 
+/**
+ * Informational lines are dim, not yellow.
+ *
+ * Yellow in a Vercel build log reads as a warning, and these messages are
+ * routine — "skipping ingest on a preview deploy" is the guard working, not a
+ * problem. Colouring them yellow made a successful build look like a failing
+ * one. Yellow is now reserved for `warn`, which only fires when the ingest
+ * actually fails.
+ */
 function note(message: string) {
-  console.log(`${YELLOW}[catalogue]${RESET} ${message}`)
+  console.log(`${DIM}[catalogue]${RESET} ${message}`)
+}
+
+function warn(message: string) {
+  console.log(`${YELLOW}[catalogue] WARNING${RESET} ${message}`)
 }
 
 async function main() {
   if (!process.env.CUSTOMERIO_APP_API_KEY) {
     note("CUSTOMERIO_APP_API_KEY not set — skipping ingest.")
-    note("The Email Catalogue page will show its setup instructions instead.")
+    note("This is not an error — the page will show its setup instructions instead.")
     return
   }
 
@@ -53,7 +67,7 @@ async function main() {
 
   if (onPreview && !previewOptIn) {
     note(`VERCEL_ENV=${vercelEnv} — skipping ingest on non-production deploy.`)
-    note("Set CATALOGUE_INGEST_ON_PREVIEW=true to ingest on previews too.")
+    note("This is not an error. Set CATALOGUE_INGEST_ON_PREVIEW=true to ingest on previews too.")
     return
   }
 
@@ -67,13 +81,13 @@ async function main() {
     console.log(`${GREEN}[catalogue]${RESET} Snapshot built in ${seconds}s.`)
   } catch (err) {
     // Deliberately exit 0: see guard 3 above.
-    note(`Ingest FAILED after ${Math.round((Date.now() - startedAt) / 1000)}s.`)
-    note(`  ${err instanceof Error ? err.message : String(err)}`)
-    note("Continuing the build with the existing snapshot, if any.")
+    warn(`ingest failed after ${Math.round((Date.now() - startedAt) / 1000)}s — the build will continue.`)
+    warn(`  ${err instanceof Error ? err.message : String(err)}`)
+    note("Continuing with the existing snapshot, if any.")
   }
 }
 
 main().catch((err) => {
   // Even an unexpected failure in the wrapper itself must not fail the build.
-  note(`Unexpected error, continuing build: ${err instanceof Error ? err.message : err}`)
+  warn(`unexpected error, continuing build: ${err instanceof Error ? err.message : err}`)
 })
