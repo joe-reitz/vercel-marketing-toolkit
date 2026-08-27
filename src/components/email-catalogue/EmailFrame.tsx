@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { matchAnchors, type AnchorMatch, type MatchReport } from "@/lib/catalogue/match"
 import {
   DARK_GROUND_THRESHOLD,
-  heatStyle,
+  glowDiameter,
+  glowGradient,
   luminanceOf,
   type HeatState,
 } from "@/lib/catalogue/heat"
@@ -36,6 +37,10 @@ export interface HeatSpot {
   isPrimaryRect: boolean
   /** Ground behind this link is dark, so the ramp anchor flips. */
   onDark: boolean
+  /** Share of the busiest link's clicks, 0–1. Drives glow size and colour. */
+  share: number
+  /** Absolute http(s) destination, or null when it isn't navigable. */
+  destination: string | null
 }
 
 interface Props {
@@ -69,6 +74,7 @@ function groundIsDark(el: Element, win: Window): boolean {
 export function EmailFrame({ html, links, basis, showHeatmap, highlightLiquid, onReport }: Props) {
   const frameRef = useRef<HTMLIFrameElement>(null)
   const [spots, setSpots] = useState<HeatSpot[]>([])
+  const [hovered, setHovered] = useState<number | null>(null)
   const [height, setHeight] = useState(600)
 
   // Ranks and the busiest link are per-email, so a hot link in a small send
@@ -150,6 +156,11 @@ export function EmailFrame({ html, links, basis, showHeatmap, highlightLiquid, o
                 : "cold"
 
       const onDark = groundIsDark(anchor, win)
+      const share = maxClicks > 0 ? Math.min(1, clicks / maxClicks) : 0
+      // Navigate to the resolved destination — the cio_link tag's url when
+      // present, otherwise the href as authored. Liquid and non-web schemes have
+      // no fixed target, so those aren't navigable.
+      const destination = toNavigable(match.resolvedHref)
 
       rects.forEach((rect, rectIndex) => {
         next.push({
@@ -165,11 +176,16 @@ export function EmailFrame({ html, links, basis, showHeatmap, highlightLiquid, o
           state,
           isPrimaryRect: rectIndex === 0,
           onDark,
+          share,
+          destination,
         })
       })
     })
 
     setSpots(next)
+    // Indices change when the document reflows; a stale one would pin a tooltip
+    // to the wrong link.
+    setHovered(null)
     onReport?.({ ...report, hiddenSpots })
     // rankByIndex/clickValues are derived from links+basis, which are the real inputs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -290,6 +306,8 @@ export function EmailFrame({ html, links, basis, showHeatmap, highlightLiquid, o
     }
   }, [measure, html])
 
+  const activeSpot = hovered != null ? spots[hovered] : null
+
   return (
     <div className="relative" style={{ background: "#ffffff" }}>
       <iframe
@@ -304,37 +322,154 @@ export function EmailFrame({ html, links, basis, showHeatmap, highlightLiquid, o
         style={{ width: "100%", height, border: "none", display: "block" }}
       />
 
-      {showHeatmap && (
-        <div className="heat-layer" aria-hidden={false}>
-          {spots.map((spot, i) => {
-            const style = heatStyle(spot.clicks, maxClicks, spot.state, spot.onDark)
-            return (
+      {/*
+        The overlay is always mounted, even with the heatmap hidden, because it
+        owns link clicks and hover tooltips. Hiding it would silently make the
+        email's links dead.
+      */}
+      <div className="heat-layer" data-heatmap={showHeatmap ? "on" : "off"}>
+        {showHeatmap &&
+          spots.map((spot, i) =>
+            spot.state === "hot" ? (
               <div
-                key={i}
-                className="heat-spot"
-                data-state={style.state}
-                tabIndex={0}
-                aria-label={describeSpot(spot, maxClicks)}
-                title={describeSpot(spot, maxClicks)}
-                style={{
-                  top: spot.rect.top,
-                  left: spot.rect.left,
-                  width: spot.rect.width,
-                  height: spot.rect.height,
-                  background: style.fill,
-                  borderColor: style.stroke,
-                }}
-              >
-                {spot.rank != null && spot.isPrimaryRect && (
-                  <span className="heat-rank">{spot.rank}</span>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
+                key={`glow-${i}`}
+                className="heat-glow"
+                style={glowBoxStyle(spot)}
+                aria-hidden
+              />
+            ) : null,
+          )}
+
+        {spots.map((spot, i) => {
+          const flag =
+            spot.state === "templated" || spot.state === "unattributed"
+              ? "unattributable"
+              : spot.destination
+                ? undefined
+                : "not-navigable"
+          const label = describeSpot(spot, maxClicks)
+          const shared = {
+            className: "heat-hit",
+            "data-flag": flag,
+            "data-state": spot.state,
+            style: {
+              top: spot.rect.top,
+              left: spot.rect.left,
+              width: spot.rect.width,
+              height: spot.rect.height,
+            },
+            onMouseEnter: () => setHovered(i),
+            onMouseLeave: () => setHovered((prev) => (prev === i ? null : prev)),
+            onFocus: () => setHovered(i),
+            onBlur: () => setHovered((prev) => (prev === i ? null : prev)),
+            "aria-label": label,
+          } as const
+
+          // rel=noopener noreferrer: these are third-party destinations from
+          // email content, so the new tab gets no handle on this page.
+          return spot.destination ? (
+            <a
+              key={`hit-${i}`}
+              {...shared}
+              href={spot.destination}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {spot.rank != null && spot.isPrimaryRect && showHeatmap && (
+                <span className="heat-rank">{spot.rank}</span>
+              )}
+            </a>
+          ) : (
+            <div key={`hit-${i}`} {...shared} tabIndex={0} role="note">
+              {spot.rank != null && spot.isPrimaryRect && showHeatmap && (
+                <span className="heat-rank">{spot.rank}</span>
+              )}
+            </div>
+          )
+        })}
+
+        {activeSpot && <Tooltip spot={activeSpot} maxClicks={maxClicks} />}
+      </div>
     </div>
   )
+}
+
+/** Centre the glow on the link's box and size it by intensity. */
+function glowBoxStyle(spot: HeatSpot): React.CSSProperties {
+  const diameter = glowDiameter(spot.rect.width, spot.rect.height, spot.share)
+  return {
+    top: spot.rect.top + spot.rect.height / 2 - diameter / 2,
+    left: spot.rect.left + spot.rect.width / 2 - diameter / 2,
+    width: diameter,
+    height: diameter,
+    background: glowGradient(spot.share),
+  }
+}
+
+/**
+ * Hover tooltip. Leads with the number, because that's what the glow can only
+ * approximate.
+ */
+function Tooltip({ spot, maxClicks }: { spot: HeatSpot; maxClicks: number }) {
+  const share = maxClicks > 0 ? Math.round((spot.clicks / maxClicks) * 100) : 0
+  const attributable = spot.state === "hot" || spot.state === "cold"
+
+  // Above the link when there's room, below when it would clip off the top.
+  const above = spot.rect.top > 78
+  const style: React.CSSProperties = {
+    left: Math.max(6, spot.rect.left),
+    top: above ? spot.rect.top - 10 : spot.rect.top + spot.rect.height + 10,
+    transform: above ? "translateY(-100%)" : undefined,
+  }
+
+  return (
+    <div className="heat-tip" style={style} role="tooltip">
+      {attributable ? (
+        <>
+          <div className="heat-tip-count">
+            {spot.clicks.toLocaleString()} {spot.clicks === 1 ? "click" : "clicks"}
+          </div>
+          <div>
+            {spot.rank != null ? `#${spot.rank} in this email · ` : ""}
+            {share}% of the busiest link
+          </div>
+        </>
+      ) : (
+        <div className="heat-tip-count">No click data</div>
+      )}
+      <div className="heat-tip-href">{spot.destination ?? spot.match.href}</div>
+      {!attributable && <div className="heat-tip-note">{reasonFor(spot)}</div>}
+      {spot.destination && <div className="heat-tip-note">Click to open in a new tab</div>}
+    </div>
+  )
+}
+
+function reasonFor(spot: HeatSpot): string {
+  switch (spot.state) {
+    case "templated":
+      return "Built with Liquid, so its destination was only decided at send time."
+    case "tracking-off":
+      return "Link tracking is switched off for this link."
+    case "untrackable":
+      return "Not a trackable web link."
+    default:
+      return "Customer.io has no click data for this link."
+  }
+}
+
+/** An absolute http(s) URL, or null when the value can't be opened. */
+function toNavigable(href: string): string | null {
+  if (!href || hasLiquidish(href)) return null
+  try {
+    const url = new URL(href)
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null
+  } catch {
+    return null
+  }
+}
+
+function hasLiquidish(href: string): boolean {
+  return /\{\{|\{%/.test(href)
 }
 
 /** Hover/screen-reader text. Says plainly when a number isn't knowable. */
