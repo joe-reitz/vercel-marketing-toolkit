@@ -14,6 +14,7 @@ const navItems = [
   { href: '/qr-code-generator', label: 'QR Codes' },
   { href: '/content-analyzer', label: 'Content' },
   { href: '/email-review', label: 'Email Review' },
+  { href: '/email-catalogue', label: 'Email Catalogue' },
   { href: '/soql-query-helper', label: 'Data Tools' },
 ]
 

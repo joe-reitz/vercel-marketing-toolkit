@@ -55,6 +55,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // --warning/--success/--error already exist in globals.css but were never
+        // exposed to the color scale, so `bg-warning/10` silently did nothing.
+        warning: "hsl(var(--warning))",
+        success: "hsl(var(--success))",
       },
       borderRadius: {
         lg: "var(--radius)",

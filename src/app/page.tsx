@@ -8,7 +8,8 @@ import {
   ScanSearch,
   QrCode,
   Sparkles,
-  Mail
+  Mail,
+  LayoutGrid
 } from 'lucide-react'
 
 const tools = [
@@ -74,6 +75,14 @@ const tools = [
     title: 'Email Review Agent',
     description: 'AI-powered email quality assurance and optimization',
     color: 'from-teal-500/40 to-teal-500/40 hover:from-teal-500/50 hover:to-teal-500/50 dark:from-teal-300/20 dark:to-teal-300/20 dark:hover:from-teal-300/30 dark:hover:to-teal-300/30',
+    lightText: false
+  },
+  {
+    href: '/email-catalogue',
+    icon: LayoutGrid,
+    title: 'Email Catalogue',
+    description: 'Browse every email sent from Customer.io with click heatmaps',
+    color: 'from-orange-500/40 to-orange-500/40 hover:from-orange-500/50 hover:to-orange-500/50 dark:from-orange-300/20 dark:to-orange-300/20 dark:hover:from-orange-300/30 dark:hover:to-orange-300/30',
     lightText: false
   },
   {
