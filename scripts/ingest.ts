@@ -22,6 +22,7 @@
  *   npm run ingest -- --type newsletter     one surface only
  *   npm run ingest -- --force               re-fetch bodies even if unchanged
  *   npm run ingest -- --include-drafts      keep emails that never sent
+ *   npm run ingest -- --include-test        keep emails with test-ish names
  */
 
 import { config as loadEnv } from "dotenv"
@@ -87,6 +88,7 @@ const LIMIT = arg("limit") ? Number(arg("limit")) : Infinity
 const ONLY_TYPE = arg("type") as EmailSurface | undefined
 const FORCE = flag("force")
 const INCLUDE_DRAFTS = flag("include-drafts")
+const INCLUDE_TEST = flag("include-test")
 
 const DATA_DIR = path.join(process.cwd(), "data")
 
@@ -164,16 +166,97 @@ function toLinks(uniqueRes: CioLinkMetric[], rawRes: CioLinkMetric[]): Catalogue
   return mergeEquivalentLinks(Array.from(byHref.values()))
 }
 
-/** Email steps only — journeys also contain SMS, push, and webhook actions. */
-function emailActions(actions: CioAction[]): CioAction[] {
-  return actions.filter((a) => a.type === "email" || (!a.type && a.body) || Boolean(a.body))
+/**
+ * Names that mark an email as internal testing rather than a real send.
+ *
+ * Word-boundary matching, not a substring check. "test" appears inside ordinary
+ * marketing copy — this workspace has "Make the safe path the fastest path",
+ * and "latest", "greatest", "contest" and "testimonial" are all waiting to
+ * happen. A substring filter would silently hide real sends, which is worse than
+ * leaving a test email in.
+ *
+ * `test`, `tests`, `testing`, and `test2` match; `fastest` and `testimonial`
+ * don't.
+ */
+const TEST_NAME = /(?<![a-z])test(?:s|ing)?(?![a-z])/i
+
+/**
+ * Checked against the email's own name and its parent campaign's name, but
+ * deliberately NOT the subject line: a subject is customer-facing copy where
+ * "test" is legitimate ("A/B test your landing pages"), so matching it there
+ * would hide real campaigns.
+ */
+function isTestEmail(name: string | undefined, parentName: string | undefined): boolean {
+  if (INCLUDE_TEST) return false
+  return TEST_NAME.test(name ?? "") || TEST_NAME.test(parentName ?? "")
 }
+
+/**
+ * Identify the A/B containers in a campaign's actions.
+ *
+ * When a journey step has variants, Customer.io returns a parent action
+ * alongside its children: the parent carries no body, no sending_state, and
+ * metrics that are the SUM of its variants. Ingesting it produced a phantom
+ * bodiless email AND double-counted every send — campaign 43's parent reported
+ * 7,070 sends while its two variants reported 3,515 and 3,555.
+ *
+ * Note the id normalisation. Customer.io returns `id` as a STRING ("729") but
+ * `parent_action_id` as a NUMBER (729), so comparing them directly — or via a
+ * Set — silently never matches, which is exactly how the containers slipped
+ * through the first attempt at this filter.
+ */
+function abContainerIds(actions: CioAction[]): Set<string> {
+  const parents = new Set<string>()
+  for (const a of actions) {
+    if (a.parent_action_id != null) parents.add(String(a.parent_action_id))
+  }
+  // Only ids that actually appear as actions count as containers.
+  const present = new Set(actions.map((a) => String(a.id)))
+  const containers = new Set<string>()
+  parents.forEach((id) => {
+    if (present.has(id)) containers.add(id)
+  })
+  return containers
+}
+
+/**
+ * Email steps only.
+ *
+ * A journey also contains webhook, attribute_update, create_event, SMS and push
+ * steps, and several of those carry a `body` — a JSON payload, not markup. This
+ * previously ended in a `|| Boolean(a.body)` catch-all, which admitted all of
+ * them: a webhook step surfaced in the catalogue as an "email" whose rendering
+ * was `{"email": "{{customer.email}}", "ip": "127.0.0.1"}`.
+ *
+ * This workspace has 161 email actions and 6 non-email actions carrying bodies
+ * (4 attribute_update, 1 create_event, 1 webhook), so the type is required to be
+ * exactly "email" rather than inferred from the presence of content. Every
+ * action Customer.io returned here has a type, so nothing legitimate is lost by
+ * being strict — and being loose means shipping webhook payloads as emails.
+ */
+function emailActions(actions: CioAction[]): CioAction[] {
+  const containers = abContainerIds(actions)
+  return actions.filter((a) => a.type === "email" && !containers.has(String(a.id)))
+}
+
+/** Non-email steps that carry a body, counted so the exclusion is visible. */
+function nonEmailWithBody(actions: CioAction[]): number {
+  return actions.filter((a) => a.type !== "email" && Boolean(a.body)).length
+}
+
 
 interface Collected {
   entry: CatalogueEmail
 }
 
-const stats = { skippedUnsent: 0, withoutBody: 0, reusedBody: 0 }
+const stats = {
+  skippedUnsent: 0,
+  withoutBody: 0,
+  reusedBody: 0,
+  skippedTest: 0,
+  skippedAbContainers: 0,
+  skippedNonEmail: 0,
+}
 
 /**
  * Decide whether an email counts as "sent".
@@ -197,6 +280,10 @@ async function collectNewsletters(prior: Map<string, CatalogueIndexEntry>): Prom
   console.log(`newsletters: ${newsletters.length}`)
 
   const out = await mapPool(newsletters, 4, async (n) => {
+    if (isTestEmail(n.name, undefined)) {
+      stats.skippedTest++
+      return []
+    }
     const contents = await getNewsletterContents(n.id)
     const metrics = toMetrics(await getNewsletterMetrics(n.id))
     if (!wasSent(metrics)) {
@@ -263,10 +350,17 @@ async function collectCampaigns(prior: Map<string, CatalogueIndexEntry>): Promis
   console.log(`campaigns: ${campaigns.length}`)
 
   const out = await mapPool(campaigns, 3, async (c) => {
-    const actions = emailActions(await listCampaignActions(c.id))
+    const allActions = await listCampaignActions(c.id)
+    const actions = emailActions(allActions)
+    stats.skippedAbContainers += abContainerIds(allActions).size
+    stats.skippedNonEmail += nonEmailWithBody(allActions)
     const results: Collected[] = []
 
     for (const a of actions) {
+      if (isTestEmail(a.name, c.name)) {
+        stats.skippedTest++
+        continue
+      }
       const metrics = toMetrics(await getCampaignActionMetrics(c.id, a.id))
       if (!wasSent(metrics)) {
         stats.skippedUnsent++
@@ -306,6 +400,10 @@ async function collectBroadcasts(prior: Map<string, CatalogueIndexEntry>): Promi
   console.log(`broadcasts: ${broadcasts.length}`)
 
   const out = await mapPool(broadcasts, 3, async (b) => {
+    if (isTestEmail(b.name, undefined)) {
+      stats.skippedTest++
+      return []
+    }
     const actions = emailActions(await listBroadcastActions(b.id))
     // Broadcast metrics are only available at the broadcast level, so a
     // multi-action broadcast shares one set of totals across its steps.
@@ -363,6 +461,10 @@ async function collectTransactional(prior: Map<string, CatalogueIndexEntry>): Pr
   console.log(`transactional: ${templates.length}`)
 
   return mapPool(templates, 4, async (t) => {
+    if (isTestEmail(t.name, undefined)) {
+      stats.skippedTest++
+      return null
+    }
     const metrics = toMetrics(await getTransactionalMetrics(t.id))
     if (!wasSent(metrics)) {
       stats.skippedUnsent++
@@ -496,6 +598,9 @@ async function main() {
       bySurface,
       withoutBody: stats.withoutBody,
       skippedUnsent: stats.skippedUnsent,
+      skippedTest: stats.skippedTest,
+      skippedAbContainers: stats.skippedAbContainers,
+      skippedNonEmail: stats.skippedNonEmail,
     },
     // Strip the heavy fields — the index page never needs HTML or link lists.
     emails: collected.map(({ entry }) => ({
@@ -522,6 +627,9 @@ async function main() {
   console.log(`  by surface: ${JSON.stringify(bySurface)}`)
   console.log(`  without body: ${stats.withoutBody}`)
   console.log(`  skipped (never sent): ${stats.skippedUnsent}`)
+  console.log(`  skipped (test names): ${stats.skippedTest}`)
+  console.log(`  skipped (A/B containers): ${stats.skippedAbContainers}`)
+  console.log(`  skipped (non-email steps with a body): ${stats.skippedNonEmail}`)
   if (stats.reusedBody) console.log(`  reused unchanged bodies: ${stats.reusedBody}`)
 }
 

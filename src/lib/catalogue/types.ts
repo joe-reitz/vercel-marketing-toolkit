@@ -146,6 +146,12 @@ export interface CatalogueIndex {
     bySurface: Record<string, number>
     withoutBody: number
     skippedUnsent: number
+    /** Excluded by name as internal testing. */
+    skippedTest?: number
+    /** A/B parent actions dropped — see emailActions() in scripts/ingest.ts. */
+    skippedAbContainers?: number
+    /** Webhook/attribute_update/create_event steps whose "body" is JSON, not markup. */
+    skippedNonEmail?: number
   }
   emails: CatalogueIndexEntry[]
 }

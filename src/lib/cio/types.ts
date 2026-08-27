@@ -99,6 +99,11 @@ export interface CioCampaignsResponse {
  * exists to keep it.
  */
 export interface CioAction {
+  /**
+   * Customer.io returns this as a STRING ("729") even though
+   * `parent_action_id` on the same object is a NUMBER. Compare the two only
+   * after normalising — see abContainerIds() in scripts/ingest.ts.
+   */
   id: number
   campaign_id?: number
   parent_action_id?: number
