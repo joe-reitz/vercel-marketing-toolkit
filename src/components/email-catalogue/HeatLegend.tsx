@@ -1,16 +1,17 @@
 "use client"
 
-import { legendStops, UNATTRIBUTED_COLOR } from "@/lib/catalogue/heat"
+import { glowLegendStops, UNATTRIBUTED_COLOR } from "@/lib/catalogue/heat"
 
 /**
- * The sequential ramp legend, plus the three non-magnitude states.
+ * Legend for the glow heatmap.
  *
- * The special states are spelled out rather than left to be inferred: a link with
- * no tint could otherwise mean "nobody clicked", "we couldn't match it", or "its
- * destination was Liquid", and those are very different claims.
+ * Two things need saying that the glow alone can't: that no glow means no clicks
+ * (rather than an unmeasured link), and that a dashed marker means the clicks
+ * exist but can't be attributed. Both are claims a reader would otherwise have to
+ * guess at.
  */
 export function HeatLegend({ maxClicks }: { maxClicks: number }) {
-  const gradient = `linear-gradient(to right, ${legendStops().join(", ")})`
+  const gradient = `linear-gradient(to right, ${glowLegendStops().join(", ")})`
 
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-muted-foreground">
@@ -23,20 +24,19 @@ export function HeatLegend({ maxClicks }: { maxClicks: number }) {
       </div>
 
       {/*
-        Border token, not the spot's own stroke: the legend sits on toolkit
-        chrome, which follows the site theme, while a real spot sits on the
-        email's own background. A hardcoded dark stroke would vanish in dark mode.
+        Glow intensity is the only positive signal now, so the absence of one has
+        to be stated. Customer.io reports only links that were clicked, so no glow
+        means no clicks — not a missing measurement.
       */}
-      <Swatch label="No clicks" className="border-dotted border-border" />
-      <Swatch label="Not trackable (mailto, tel, anchor)" className="border-solid border-border" />
+      <span>No glow = no clicks</span>
 
       {/*
-        Liquid, no-match, and ambiguous share one treatment because they share one
-        meaning: a number we decline to claim. Listing them separately with
-        identical swatches only implied a distinction the colors don't make.
+        The one state that still needs a drawn marker: a link whose clicks can't
+        be attributed. A glow would imply a number we don't have, and leaving it
+        bare would read as "no clicks", which is a different claim.
       */}
       <Swatch
-        label="Not attributable — Liquid or ambiguous"
+        label="Not attributable"
         icon="⚠"
         className="border-dashed"
         style={{ background: "rgba(250, 178, 25, 0.18)", borderColor: UNATTRIBUTED_COLOR }}
@@ -48,6 +48,7 @@ export function HeatLegend({ maxClicks }: { maxClicks: number }) {
         </span>
         Rank by clicks
       </span>
+      <span>Hover a link for its exact count · click to open it</span>
     </div>
   )
 }
